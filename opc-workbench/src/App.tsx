@@ -13,11 +13,13 @@ import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { SettingsPage } from './components/SettingsPage';
 import { ChatPage } from './pages/ChatPage';
+import { DashboardPage } from './pages/DashboardPage';
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<AppContent />} />
+      <Route path="/chat" element={<AppContent />} />
       <Route path="/chat/:sessionId" element={<AppContent />} />
       <Route path="/settings" element={<AppContent />} />
     </Routes>
@@ -29,6 +31,7 @@ function AppContent() {
   const { sessionId: urlSessionId } = useParams<{ sessionId: string }>();
   const location = useLocation();
   const isSettingsPage = location.pathname === '/settings';
+  const isDashboard = location.pathname === '/' || (location.pathname === '/chat' && !urlSessionId && location.pathname === '/chat');
 
   const { theme, toggleTheme } = useTheme();
   const { agents, addAgent, updateAgent, deleteAgent, getAgent } = useAgents();
@@ -75,10 +78,10 @@ function AppContent() {
   useEffect(() => {
     if (urlSessionId && urlSessionId !== currentSessionId) {
       setCurrentSessionId(urlSessionId);
-    } else if (!urlSessionId && !isSettingsPage && currentSessionId) {
+    } else if (!urlSessionId && !isSettingsPage && !isDashboard && currentSessionId) {
       setCurrentSessionId(null);
     }
-  }, [urlSessionId, isSettingsPage, currentSessionId, setCurrentSessionId]);
+  }, [urlSessionId, isSettingsPage, isDashboard, currentSessionId, setCurrentSessionId]);
 
   useEffect(() => {
     if (currentSessionId && sessionModels[currentSessionId]) {
@@ -108,7 +111,7 @@ function AppContent() {
 
   const handleNewChat = useCallback(() => {
     setCurrentSessionId(null);
-    navigate('/');
+    navigate('/chat');
   }, [navigate, setCurrentSessionId]);
 
   const handleSelectSession = useCallback((sessionId: string) => {
@@ -118,6 +121,10 @@ function AppContent() {
 
   const handleOpenSettings = useCallback(() => {
     navigate('/settings');
+  }, [navigate]);
+
+  const handleOpenDashboard = useCallback(() => {
+    navigate('/');
   }, [navigate]);
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -132,6 +139,7 @@ function AppContent() {
         sessions={sessions}
         currentSessionId={currentSessionId}
         isSettingsPage={isSettingsPage}
+        isDashboard={isDashboard}
         sidebarOpen={sidebarOpen}
         agents={agents}
         getAgent={getAgent}
@@ -139,6 +147,7 @@ function AppContent() {
         onSelectSession={handleSelectSession}
         onDeleteSession={handleDeleteSession}
         onOpenSettings={handleOpenSettings}
+        onOpenDashboard={handleOpenDashboard}
       />
 
       <main
@@ -147,6 +156,7 @@ function AppContent() {
       >
         <Header
           isSettingsPage={isSettingsPage}
+          isDashboard={isDashboard}
           sidebarOpen={sidebarOpen}
           theme={theme}
           currentSession={currentSession}
@@ -164,6 +174,8 @@ function AppContent() {
             onUpdate={updateAgent}
             onDelete={deleteAgent}
           />
+        ) : isDashboard ? (
+          <DashboardPage />
         ) : (
           <ChatPage
             currentSession={currentSession}

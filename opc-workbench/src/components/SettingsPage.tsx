@@ -250,6 +250,7 @@ export function SettingsPage({
     setFormData({
       ...template,
       description: template.description,
+      permissionMode: 'default',
     });
     setIsCreating(true);
   };

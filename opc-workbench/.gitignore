@@ -7,6 +7,14 @@ dist-server/
 dist-electron/
 release/
 
+# TypeScript compiled output (from tsc -b)
+*.tsbuildinfo
+server/**/*.js
+server/**/*.d.ts
+src/**/*.js
+vite.config.js
+vite.config.d.ts
+
 # Data
 data/
 

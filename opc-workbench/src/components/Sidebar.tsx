@@ -1,6 +1,6 @@
 import { Button, Tooltip } from 'tdesign-react';
 import { AddIcon, DeleteIcon, SettingIcon } from 'tdesign-icons-react';
-import { Bot } from 'lucide-react';
+import { Bot, LayoutGrid } from 'lucide-react';
 import { APP_CONFIG } from '../config';
 import { Session, Agent } from '../types';
 import { ICON_MAP } from '../utils/iconMap';
@@ -9,6 +9,7 @@ interface SidebarProps {
   sessions: Session[];
   currentSessionId: string | null;
   isSettingsPage: boolean;
+  isDashboard: boolean;
   sidebarOpen: boolean;
   agents: Agent[];
   getAgent: (id: string) => Agent | undefined;
@@ -16,11 +17,12 @@ interface SidebarProps {
   onSelectSession: (sessionId: string) => void;
   onDeleteSession: (sessionId: string) => void;
   onOpenSettings: () => void;
+  onOpenDashboard: () => void;
 }
 
 export function Sidebar({
-  sessions, currentSessionId, isSettingsPage, sidebarOpen, agents, getAgent,
-  onNewChat, onSelectSession, onDeleteSession, onOpenSettings,
+  sessions, currentSessionId, isSettingsPage, isDashboard, sidebarOpen, agents, getAgent,
+  onNewChat, onSelectSession, onDeleteSession, onOpenSettings, onOpenDashboard,
 }: SidebarProps) {
   return (
     <aside
@@ -36,10 +38,29 @@ export function Sidebar({
         </div>
       </div>
 
-      <div className="p-3">
+      {/* 工作台入口 */}
+      <div className="p-3 pb-1">
+        <div
+          className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer transition-colors duration-200"
+          style={{
+            backgroundColor: isDashboard ? 'var(--td-brand-color-light)' : 'transparent',
+            color: isDashboard ? 'var(--td-brand-color)' : 'var(--td-text-color-secondary)',
+          }}
+          onClick={onOpenDashboard}
+          onMouseEnter={(e) => { if (!isDashboard) e.currentTarget.style.backgroundColor = 'var(--td-bg-color-component-hover)'; }}
+          onMouseLeave={(e) => { if (!isDashboard) e.currentTarget.style.backgroundColor = 'transparent'; }}
+        >
+          <LayoutGrid size={16} color="currentColor" />
+          <span className="text-sm font-medium">工作台</span>
+        </div>
+      </div>
+
+      {/* 新对话按钮 */}
+      <div className="px-3 pb-1">
         <Button icon={<AddIcon />} onClick={onNewChat} block variant="outline">新对话</Button>
       </div>
 
+      {/* 会话列表 */}
       <div className="flex-1 overflow-y-auto p-2 space-y-1">
         {sessions.map(session => {
           const sessionAgent = session.agentId ? getAgent(session.agentId) : getAgent('default');
@@ -49,12 +70,12 @@ export function Sidebar({
               key={session.id}
               className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer transition-colors duration-200 group"
               style={{
-                backgroundColor: session.id === currentSessionId && !isSettingsPage ? 'var(--td-brand-color-light)' : 'transparent',
-                color: session.id === currentSessionId && !isSettingsPage ? 'var(--td-brand-color)' : 'var(--td-text-color-secondary)'
+                backgroundColor: session.id === currentSessionId && !isSettingsPage && !isDashboard ? 'var(--td-brand-color-light)' : 'transparent',
+                color: session.id === currentSessionId && !isSettingsPage && !isDashboard ? 'var(--td-brand-color)' : 'var(--td-text-color-secondary)'
               }}
               onClick={() => onSelectSession(session.id)}
-              onMouseEnter={(e) => { if (session.id !== currentSessionId || isSettingsPage) e.currentTarget.style.backgroundColor = 'var(--td-bg-color-component-hover)'; }}
-              onMouseLeave={(e) => { if (session.id !== currentSessionId || isSettingsPage) e.currentTarget.style.backgroundColor = 'transparent'; }}
+              onMouseEnter={(e) => { if (session.id !== currentSessionId || isSettingsPage || isDashboard) e.currentTarget.style.backgroundColor = 'var(--td-bg-color-component-hover)'; }}
+              onMouseLeave={(e) => { if (session.id !== currentSessionId || isSettingsPage || isDashboard) e.currentTarget.style.backgroundColor = 'transparent'; }}
             >
               <div className="flex-shrink-0 w-5 h-5 rounded flex items-center justify-center" style={{ backgroundColor: sessionAgent?.color || 'var(--td-brand-color)' }}>
                 <AgentIcon size={12} color="white" />

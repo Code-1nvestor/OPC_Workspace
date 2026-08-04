@@ -318,7 +318,7 @@ app.post("/api/chat", async (req, res) => {
             }
           }
         }
-      } else if (msg.type === "tool_result") {
+      } else if ((msg as any).type === "tool_result") {
         const msgAny = msg as any;
         const toolId = msgAny.tool_use_id || currentToolId;
         const isError = msgAny.is_error || false;
@@ -338,7 +338,7 @@ app.post("/api/chat", async (req, res) => {
             res.write(`data: ${JSON.stringify({ type: "tool_result", toolId: tool.id, content: tool.result || "已完成" })}\n\n`);
           }
         });
-        res.write(`data: ${JSON.stringify({ type: "done", duration: msg.duration, cost: msg.cost })}\n\n`);
+        res.write(`data: ${JSON.stringify({ type: "done", duration: (msg as any).duration, cost: (msg as any).cost })}\n\n`);
       }
     }
 
