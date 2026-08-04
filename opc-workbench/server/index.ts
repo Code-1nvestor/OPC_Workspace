@@ -371,10 +371,17 @@ if (process.env.OPC_EMBEDDED === '1') {
 
 // ============= 服务启动 =============
 
+// 供 Electron 主进程退出时调用（bundle 后只有 index.js，故在此再导出一次）
+export { closeDb } from './db.js';
+
 export function startServer(port?: number) {
-  const listenPort = port || Number(process.env.PORT) || 3000;
+  // 注意：port 可能为 0（让 OS 分配动态端口），不能用 `||` 判断
+  const listenPort =
+    typeof port === 'number' ? port : Number(process.env.PORT) || 3000;
   const server = app.listen(listenPort, () => {
-    console.log(`\n  API server started at http://localhost:${listenPort}\n  Database: SQLite (${process.env.OPC_DB_PATH || 'data/opc.db'})\n`);
+    const addr = server.address();
+    const actualPort = typeof addr === 'object' && addr ? addr.port : listenPort;
+    console.log(`\n  API server started at http://localhost:${actualPort}\n  Database: SQLite (${process.env.OPC_DB_PATH || 'data/opc.db'})\n`);
   });
   return server;
 }
