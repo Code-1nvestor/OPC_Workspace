@@ -18,7 +18,9 @@
     "server": "tsx server/index.ts",
     "rebuild:electron": "electron-rebuild -f -w better-sqlite3",
     "rebuild:node": "npm rebuild better-sqlite3",
-    "dist": "npm run build && npm run build:server && npm run rebuild:electron && electron-builder"
+    "dist": "npm run build && npm run build:server && npm run rebuild:electron && electron-builder",
+    "dist:final": "node scripts/assemble-release.cjs && node scripts/pack-zip.cjs",
+    "test:final": "node scripts/test-final.cjs"
   },
   "dependencies": {
     "@tdesign-react/aigc": "^0.1.0-alpha.1",

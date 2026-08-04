@@ -6,6 +6,18 @@ dist/
 dist-server/
 dist-electron/
 release/
+release-*/
+dist-release/
+release-packaged/
+_zip_tmp/
+_zip_tmp*/
+release-final/
+_release_locked_*/
+_app.asar.locked*
+
+# Release artifacts (too large for git, distribute via GitHub Releases)
+OPC-Workbench-*.zip
+OPC-Workbench-*.exe
 
 # TypeScript compiled output (from tsc -b)
 *.tsbuildinfo
@@ -14,6 +26,7 @@ server/**/*.d.ts
 src/**/*.js
 vite.config.js
 vite.config.d.ts
+electron/**/*.js
 
 # Data
 data/

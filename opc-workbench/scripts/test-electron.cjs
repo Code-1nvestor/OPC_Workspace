@@ -11,10 +11,7 @@ const electronBin = require(path.join(root, 'node_modules', 'electron'));
 const env = { ...process.env };
 delete env.ELECTRON_RUN_AS_NODE;
 delete env.NODE_OPTIONS;
-// 渲染进程加载完成 3s 后走真实退出路径（等价于托盘「退出」）
 env.OPC_TEST_AUTOQUIT = '3000';
-
-console.log('[test] electron bin =', electronBin);
 
 // 测试环境无 GPU，禁用硬件加速避免 GPU 进程反复崩溃
 const child = spawn(electronBin, ['.', '--disable-gpu', '--disable-software-rasterizer', '--no-sandbox'], {
@@ -24,25 +21,15 @@ const child = spawn(electronBin, ['.', '--disable-gpu', '--disable-software-rast
 });
 
 let out = '';
-child.stdout.on('data', (d) => {
-  out += d.toString();
-  process.stdout.write('[out] ' + d.toString());
-});
-child.stderr.on('data', (d) => {
-  out += d.toString();
-  process.stdout.write('[err] ' + d.toString());
-});
+child.stdout.on('data', (d) => { out += d.toString(); process.stdout.write('[out] ' + d.toString()); });
+child.stderr.on('data', (d) => { out += d.toString(); process.stderr.write('[err] ' + d.toString()); });
 
 function report(exitCode) {
   console.log('\n[test] ---- 检查残留进程 ----');
   let residual = '';
   try {
-    residual = execSync('tasklist /FI "IMAGENAME eq electron.exe" /NH', {
-      encoding: 'utf8',
-    }).trim();
-  } catch (e) {
-    residual = '(tasklist failed: ' + e.message + ')';
-  }
+    residual = execSync('tasklist /FI "IMAGENAME eq electron.exe" /NH', { encoding: 'utf8' }).trim();
+  } catch (e) { residual = '(tasklist failed: ' + e.message + ')'; }
   const hasResidual = /electron\.exe/i.test(residual);
   console.log(residual);
 
@@ -78,7 +65,6 @@ child.on('exit', (code) => {
   }
 });
 
-// 兜底超时
 setTimeout(() => {
   if (!reported) {
     reported = true;

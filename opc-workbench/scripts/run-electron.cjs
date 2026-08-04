@@ -6,10 +6,6 @@
  * 前者会让 Electron 退化成纯 Node 运行，require('electron') 拿不到 app/BrowserWindow API；
  * 后者可能注入与 Electron 不兼容的 --require 钩子。
  * cross-env 只能"设置"变量、无法"删除"，所以用这个脚本清理后再拉起 Electron。
- *
- * 用法：
- *   node scripts/run-electron.cjs          # 生产模式（加载内嵌 Express 提供的 dist）
- *   node scripts/run-electron.cjs --dev    # 开发模式（加载 Vite dev server）
  */
 const { spawn } = require('child_process');
 const path = require('path');
@@ -37,13 +33,8 @@ const child = spawn(electronBin, ['.', ...args], {
 
 child.on('exit', (code) => process.exit(code === null ? 1 : code));
 
-// 转发中断信号，保证 Ctrl+C 能走 Electron 的 before-quit 清理
 for (const sig of ['SIGINT', 'SIGTERM']) {
   process.on(sig, () => {
-    try {
-      child.kill(sig);
-    } catch {
-      /* ignore */
-    }
+    try { child.kill(sig); } catch {}
   });
 }
