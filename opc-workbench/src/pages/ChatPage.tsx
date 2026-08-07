@@ -56,15 +56,15 @@ export function ChatPage({
   const [newChatAgentId, setNewChatAgentId] = useState('default');
   const [newChatCwd, setNewChatCwd] = useState('');
 
-  // 登录状态检查
-  const [loginStatus, setLoginStatus] = useState<{ checked: boolean; isLoggedIn: boolean; error?: string }>({
+  // 登录状态检查（含 Provider 信息）
+  const [loginStatus, setLoginStatus] = useState<{ checked: boolean; isLoggedIn: boolean; error?: string; providerId?: string; providerName?: string }>({
     checked: false,
     isLoggedIn: false,
   });
 
   useEffect(() => {
     api.checkLogin().then(res => {
-      setLoginStatus({ checked: true, isLoggedIn: res.isLoggedIn, error: res.error });
+      setLoginStatus({ checked: true, isLoggedIn: res.isLoggedIn, error: res.error, providerId: (res as any).providerId, providerName: (res as any).providerName });
     }).catch(() => {
       setLoginStatus({ checked: true, isLoggedIn: false, error: '无法连接服务器' });
     });
@@ -114,10 +114,10 @@ export function ChatPage({
             <KeyRound size={28} color="var(--td-warning-color, #e6a23c)" />
           </div>
           <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--td-text-color-primary)' }}>
-            聊天功能需要配置 API Key
+            聊天功能需要配置 LLM Provider
           </h3>
           <p className="text-sm mb-4" style={{ color: 'var(--td-text-color-secondary)' }}>
-            当前未检测到 CodeBuddy API Key。请配置后使用 AI 对话功能。
+            当前 Provider（{loginStatus.providerName || '未知'}）未检测到有效配置。请前往「设置」页面配置 API Key，或在 <code style={{ backgroundColor: 'var(--td-bg-color-secondarycontainer)', padding: '2px 6px', borderRadius: 4 }}>.env</code> 文件中设置。
           </p>
           {loginStatus.error && (
             <div
@@ -135,21 +135,17 @@ export function ChatPage({
             className="p-4 rounded-lg text-left text-xs space-y-2"
             style={{ backgroundColor: 'var(--td-bg-color-component)' }}
           >
-            <p className="font-medium" style={{ color: 'var(--td-text-color-primary)' }}>配置方法：</p>
-            <p style={{ color: 'var(--td-text-color-secondary)' }}>
-              1. 在项目根目录的 <code style={{ backgroundColor: 'var(--td-bg-color-secondarycontainer)', padding: '2px 6px', borderRadius: 4 }}>.env</code> 文件中设置：
-            </p>
-            <pre
-              className="p-2 rounded font-mono text-xs"
-              style={{ backgroundColor: 'var(--td-bg-color-secondarycontainer)', color: 'var(--td-text-color-primary)' }}
-            >
-{`CODEBUDDY_API_KEY=your_api_key_here`}
-            </pre>
-            <p style={{ color: 'var(--td-text-color-secondary)' }}>
-              2. 重启服务 <code style={{ backgroundColor: 'var(--td-bg-color-secondarycontainer)', padding: '2px 6px', borderRadius: 4 }}>npm run dev</code>
+            <p className="font-medium" style={{ color: 'var(--td-text-color-primary)' }}>支持的 Provider：</p>
+            <div className="space-y-1.5" style={{ color: 'var(--td-text-color-secondary)' }}>
+              <p><strong>CodeBuddy</strong>（默认）：CODEBUDDY_API_KEY 或 CLI 登录</p>
+              <p><strong>火山 GLM-5.2</strong>：ANTHROPIC_API_KEY（当前免费）</p>
+              <p><strong>Agnes</strong>（免费）：OPENAI_API_KEY，模型 agnes-2.0-flash</p>
+            </div>
+            <p className="mt-3" style={{ color: 'var(--td-text-color-secondary)' }}>
+              在 <code style={{ backgroundColor: 'var(--td-bg-color-secondarycontainer)', padding: '2px 6px', borderRadius: 4 }}>.env</code> 文件中设置 <code style={{ backgroundColor: 'var(--td-bg-color-secondarycontainer)', padding: '2px 6px', borderRadius: 4 }}>LLM_PROVIDER</code> 和对应 Key，然后重启服务
             </p>
             <p style={{ color: 'var(--td-text-color-secondary)' }}>
-              3. 或前往「设置」页面通过界面配置
+              或前往「设置」页面通过界面配置
             </p>
           </div>
           <p className="text-xs mt-4" style={{ color: 'var(--td-text-color-placeholder)' }}>

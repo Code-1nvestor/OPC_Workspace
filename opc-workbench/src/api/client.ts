@@ -87,7 +87,26 @@ export const api = {
   },
 
   // Chat login check
-  checkLogin: () => request<{ isLoggedIn: boolean; method?: string; envConfigured?: boolean; error?: string; apiKey?: string }>('/check-login'),
+  checkLogin: () => request<{
+    isLoggedIn: boolean;
+    method?: string;
+    providerId?: string;
+    providerName?: string;
+    envConfigured?: boolean;
+    error?: string;
+    apiKey?: string;
+  }>('/check-login'),
+
+  // Provider 管理
+  getProviders: () => request<{
+    providers: Array<{ id: string; name: string; available: boolean; isCurrent: boolean }>;
+    current: string;
+  }>('/providers'),
+  switchProvider: (provider: string) =>
+    request<{ success: boolean; provider: string; message: string }>('/providers/switch', {
+      method: 'POST',
+      body: JSON.stringify({ provider }),
+    }),
 };
 
 export default api;
