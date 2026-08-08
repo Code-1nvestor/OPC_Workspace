@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { 
-  Form, 
-  Input, 
-  Textarea, 
-  Button, 
+import {
+  Form,
+  Input,
+  Textarea,
+  Button,
   Tooltip,
   Popconfirm,
   MessagePlugin,
@@ -12,9 +12,9 @@ import {
   Tag,
   Select
 } from 'tdesign-react';
-import { 
-  AddIcon, 
-  EditIcon, 
+import {
+  AddIcon,
+  EditIcon,
   DeleteIcon,
   CheckIcon,
   CheckCircleFilledIcon,
@@ -23,6 +23,7 @@ import {
 } from 'tdesign-icons-react';
 import { Bot, Sparkles, Code, FileText, Globe, Lightbulb } from 'lucide-react';
 import { CustomAgent, PermissionMode } from '../types';
+import { api } from '../api/client';
 
 interface SettingsPageProps {
   agents: CustomAgent[];
@@ -31,23 +32,7 @@ interface SettingsPageProps {
   onDelete: (id: string) => void;
 }
 
-type LoginMethod = 'env' | 'cli' | 'none';
-
-interface LoginStatus {
-  isLoggedIn: boolean;
-  checking: boolean;
-  method?: LoginMethod;
-  envConfigured?: boolean;
-  cliConfigured?: boolean;
-  error?: string;
-  apiKey?: string;
-  envVars?: {
-    apiKey?: string;
-    authToken?: string;
-    internetEnv?: string;
-    baseUrl?: string;
-  };
-}
+interface ProviderInfo { id: string; name: string; available: boolean; isCurrent: boolean; }
 
 const PRESET_ICONS = [
   { name: 'Bot', icon: Bot },
@@ -59,7 +44,7 @@ const PRESET_ICONS = [
 ];
 
 const PRESET_COLORS = [
-  '#0052d9', '#0594fa', '#00a870', '#ed7b2f', 
+  '#0052d9', '#0594fa', '#00a870', '#ed7b2f',
   '#e34d59', '#a25eb5', '#5c6bc0', '#26a69a'
 ];
 
@@ -101,11 +86,11 @@ const PRESET_TEMPLATES = [
   },
 ];
 
-export function SettingsPage({ 
-  agents, 
-  onAdd, 
-  onUpdate, 
-  onDelete 
+export function SettingsPage({
+  agents,
+  onAdd,
+  onUpdate,
+  onDelete
 }: SettingsPageProps) {
   const [editingAgent, setEditingAgent] = useState<CustomAgent | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -117,58 +102,70 @@ export function SettingsPage({
     color: '#0052d9',
     permissionMode: 'default' as PermissionMode,
   });
-  
+
   // 登录状态
-  const [loginStatus, setLoginStatus] = useState<LoginStatus>({
+  const [loginStatus, setLoginStatus] = useState<{ isLoggedIn: boolean; checking: boolean; providerId?: string; providerName?: string; error?: string }>({
     isLoggedIn: false,
     checking: true,
   });
-  
+
+  // Provider 状态
+  const [providers, setProviders] = useState<ProviderInfo[]>([]);
+  const [switchingProvider, setSwitchingProvider] = useState(false);
+
   // 环境变量配置
   const [showEnvConfig, setShowEnvConfig] = useState(false);
   const [envConfig, setEnvConfig] = useState({
     apiKey: '',
     authToken: '',
-    internetEnv: '' as '' | 'internal' | 'iOA',
-    baseUrl: '',
+    anthropicApiKey: '',
+    anthropicModel: '',
+    openaiApiKey: '',
+    openaiModel: '',
   });
   const [savingEnv, setSavingEnv] = useState(false);
 
   // 检查登录状态
   const checkLoginStatus = useCallback(async () => {
     setLoginStatus(prev => ({ ...prev, checking: true, error: undefined }));
-    
     try {
-      const response = await fetch('/api/check-login');
-      const data = await response.json();
-      
+      const data = await api.checkLogin();
       setLoginStatus({
         isLoggedIn: data.isLoggedIn,
         checking: false,
-        method: data.method,
-        envConfigured: data.envConfigured,
-        cliConfigured: data.cliConfigured,
+        providerId: (data as any).providerId,
+        providerName: (data as any).providerName,
         error: data.error,
-        apiKey: data.apiKey,
-        envVars: data.envVars,
       });
     } catch (error: any) {
-      setLoginStatus({
-        isLoggedIn: false,
-        checking: false,
-        error: error?.message || '检查登录状态失败',
-      });
+      setLoginStatus({ isLoggedIn: false, checking: false, error: error?.message || '检查登录状态失败' });
     }
   }, []);
-  
-  // 保存环境变量配置
-  const saveEnvConfig = async () => {
-    const hasAnyConfig = envConfig.apiKey.trim() || envConfig.authToken.trim();
-    if (!hasAnyConfig) {
-      MessagePlugin.warning('请至少配置 API Key 或 Auth Token');
-      return;
+
+  // 获取 Provider 列表
+  const fetchProviders = useCallback(async () => {
+    try {
+      const data = await api.getProviders();
+      setProviders(data.providers);
+    } catch { /* ignore */ }
+  }, []);
+
+  // 切换 Provider
+  const handleSwitchProvider = async (providerId: string) => {
+    setSwitchingProvider(true);
+    try {
+      await api.switchProvider(providerId);
+      MessagePlugin.success('已切换到 ' + providerId);
+      await Promise.all([fetchProviders(), checkLoginStatus()]);
+    } catch (error: any) {
+      MessagePlugin.error(error?.message || '切换失败');
+    } finally {
+      setSwitchingProvider(false);
     }
-    
+  };
+
+  // 保存环境变量配置（多 Provider）
+  const saveEnvConfig = async () => {
     setSavingEnv(true);
     try {
       const response = await fetch('/api/save-env-config', {
@@ -177,18 +174,21 @@ export function SettingsPage({
         body: JSON.stringify({
           apiKey: envConfig.apiKey.trim() || undefined,
           authToken: envConfig.authToken.trim() || undefined,
-          internetEnv: envConfig.internetEnv || undefined,
-          baseUrl: envConfig.baseUrl.trim() || undefined,
+          anthropicApiKey: envConfig.anthropicApiKey.trim() || undefined,
+          anthropicModel: envConfig.anthropicModel.trim() || undefined,
+          openaiApiKey: envConfig.openaiApiKey.trim() || undefined,
+          openaiModel: envConfig.openaiModel.trim() || undefined,
         }),
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         MessagePlugin.success(data.message);
         setShowEnvConfig(false);
-        setEnvConfig({ apiKey: '', authToken: '', internetEnv: '', baseUrl: '' });
+        setEnvConfig({ apiKey: '', authToken: '', anthropicApiKey: '', anthropicModel: '', openaiApiKey: '', openaiModel: '' });
         checkLoginStatus();
+        fetchProviders();
       } else {
         MessagePlugin.error(data.error || '保存失败');
       }
@@ -201,7 +201,8 @@ export function SettingsPage({
 
   useEffect(() => {
     checkLoginStatus();
-  }, [checkLoginStatus]);
+    fetchProviders();
+  }, [checkLoginStatus, fetchProviders]);
 
   const resetForm = () => {
     setFormData({
@@ -276,67 +277,90 @@ export function SettingsPage({
             设置
           </h1>
           <p style={{ color: 'var(--td-text-color-secondary)' }}>
-            管理登录配置和自定义 Agent
+            管理登录配置、LLM Provider 和自定义 Agent
           </p>
         </div>
 
-        {/* 登录配置 */}
+        {/* LLM Provider */}
         <div>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-lg font-medium" style={{ color: 'var(--td-text-color-primary)' }}>登录配置</h2>
-              <p className="text-sm mt-1" style={{ color: 'var(--td-text-color-secondary)' }}>支持环境变量或 CodeBuddy CLI 登录</p>
+              <h2 className="text-lg font-medium" style={{ color: 'var(--td-text-color-primary)' }}>LLM Provider</h2>
+              <p className="text-sm mt-1" style={{ color: 'var(--td-text-color-secondary)' }}>选择和配置 AI 模型提供方</p>
             </div>
-            <Button variant="text" icon={<RefreshIcon />} onClick={checkLoginStatus} loading={loginStatus.checking}>刷新</Button>
+            <Button variant="text" icon={<RefreshIcon />} onClick={() => { checkLoginStatus(); fetchProviders(); }} loading={loginStatus.checking}>刷新</Button>
           </div>
-          
-          <div className="flex items-center gap-3 mb-6">
+
+          <div className="flex items-center gap-3 mb-4">
             {loginStatus.checking ? (
               <><Loading size="small" /><span style={{ color: 'var(--td-text-color-secondary)' }}>正在检查...</span></>
             ) : loginStatus.isLoggedIn ? (
-              <>
-                <CheckCircleFilledIcon size="20px" style={{ color: 'var(--td-success-color)' }} />
-                <span style={{ color: 'var(--td-text-color-primary)' }}>已登录</span>
-                <Tag size="small" variant="outline">{loginStatus.method === 'env' ? '环境变量' : 'CLI'}</Tag>
-              </>
+              <><CheckCircleFilledIcon size="20px" style={{ color: 'var(--td-success-color)' }} /><span style={{ color: 'var(--td-text-color-primary)' }}>已连接</span><Tag size="small" variant="outline">{loginStatus.providerName || loginStatus.providerId}</Tag></>
             ) : (
-              <>
-                <CloseCircleFilledIcon size="20px" style={{ color: 'var(--td-text-color-placeholder)' }} />
-                <span style={{ color: 'var(--td-text-color-secondary)' }}>未登录</span>
-              </>
+              <><CloseCircleFilledIcon size="20px" style={{ color: 'var(--td-text-color-placeholder)' }} /><span style={{ color: 'var(--td-text-color-secondary)' }}>未连接</span></>
             )}
           </div>
-          
-          <div className="mb-6">
-            <h3 className="text-sm font-medium mb-3" style={{ color: 'var(--td-text-color-secondary)' }}>方式一：环境变量</h3>
-            {showEnvConfig ? (
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs block mb-1" style={{ color: 'var(--td-text-color-placeholder)' }}>CODEBUDDY_API_KEY</label>
-                    <Input type="password" size="small" value={envConfig.apiKey} onChange={(v) => setEnvConfig(prev => ({ ...prev, apiKey: v as string }))} placeholder="API 密钥" />
+
+          {providers.length > 0 && (
+            <div className="space-y-2 mb-4">
+              {providers.map(p => (
+                <div key={p.id} className="p-3 rounded-lg flex items-center justify-between" style={{ backgroundColor: p.isCurrent ? 'var(--td-brand-color-light)' : 'var(--td-bg-color-component)', border: p.isCurrent ? '1px solid var(--td-brand-color)' : '1px solid var(--td-component-border)' }}>
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-col">
+                      <span className="font-medium text-sm" style={{ color: 'var(--td-text-color-primary)' }}>{p.name}</span>
+                      <span className="text-xs" style={{ color: 'var(--td-text-color-placeholder)' }}>{p.id} - {p.available ? '已配置' : '未配置'}</span>
+                    </div>
+                    {p.isCurrent && <Tag size="small" theme="primary">当前</Tag>}
                   </div>
-                  <div>
-                    <label className="text-xs block mb-1" style={{ color: 'var(--td-text-color-placeholder)' }}>CODEBUDDY_AUTH_TOKEN</label>
-                    <Input type="password" size="small" value={envConfig.authToken} onChange={(v) => setEnvConfig(prev => ({ ...prev, authToken: v as string }))} placeholder="认证令牌" />
+                  <div className="flex items-center gap-2">
+                    {p.available && !p.isCurrent && (
+                      <Button size="small" theme="primary" variant="outline" loading={switchingProvider} onClick={() => handleSwitchProvider(p.id)}>切换</Button>
+                    )}
+                    {!p.available && <Tag size="small" variant="outline" style={{ color: 'var(--td-text-color-placeholder)' }}>未配置</Tag>}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button size="small" theme="primary" onClick={saveEnvConfig} loading={savingEnv}>保存</Button>
-                  <Button size="small" variant="text" onClick={() => { setShowEnvConfig(false); setEnvConfig({ apiKey: '', authToken: '', internetEnv: '', baseUrl: '' }); }}>取消</Button>
+              ))}
+            </div>
+          )}
+
+          <div className="mb-4">
+            {showEnvConfig ? (
+              <div className="p-4 rounded-lg space-y-3" style={{ backgroundColor: 'var(--td-bg-color-component)' }}>
+                <h4 className="text-sm font-medium" style={{ color: 'var(--td-text-color-primary)' }}>环境变量配置</h4>
+                <div className="space-y-2">
+                  <p className="text-xs font-medium" style={{ color: 'var(--td-text-color-secondary)' }}>CodeBuddy</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input type="password" size="small" value={envConfig.apiKey} onChange={(v: any) => setEnvConfig(prev => ({ ...prev, apiKey: v }))} placeholder="CODEBUDDY_API_KEY" />
+                    <Input type="password" size="small" value={envConfig.authToken} onChange={(v: any) => setEnvConfig(prev => ({ ...prev, authToken: v }))} placeholder="CODEBUDDY_AUTH_TOKEN" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs font-medium" style={{ color: 'var(--td-text-color-secondary)' }}>Anthropic / 火山 GLM-5.2</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input type="password" size="small" value={envConfig.anthropicApiKey} onChange={(v: any) => setEnvConfig(prev => ({ ...prev, anthropicApiKey: v }))} placeholder="ANTHROPIC_API_KEY" />
+                    <Input size="small" value={envConfig.anthropicModel} onChange={(v: any) => setEnvConfig(prev => ({ ...prev, anthropicModel: v }))} placeholder="glm-5.2" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs font-medium" style={{ color: 'var(--td-text-color-secondary)' }}>OpenAI / Agnes</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input type="password" size="small" value={envConfig.openaiApiKey} onChange={(v: any) => setEnvConfig(prev => ({ ...prev, openaiApiKey: v }))} placeholder="OPENAI_API_KEY" />
+                    <Input size="small" value={envConfig.openaiModel} onChange={(v: any) => setEnvConfig(prev => ({ ...prev, openaiModel: v }))} placeholder="agnes-2.0-flash" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 pt-2">
+                  <Button size="small" theme="primary" onClick={saveEnvConfig} loading={savingEnv}>保存配置</Button>
+                  <Button size="small" variant="text" onClick={() => setShowEnvConfig(false)}>取消</Button>
                 </div>
               </div>
             ) : (
               <Button variant="outline" size="small" onClick={() => setShowEnvConfig(true)}>配置环境变量</Button>
             )}
           </div>
-          
-          <div>
-            <h3 className="text-sm font-medium mb-3" style={{ color: 'var(--td-text-color-secondary)' }}>方式二：CodeBuddy CLI</h3>
-            <div className="flex items-center gap-3">
-              <code className="px-3 py-1.5 rounded text-sm" style={{ backgroundColor: 'var(--td-bg-color-component)', color: 'var(--td-text-color-primary)' }}>codebuddy</code>
-              <Link href="https://www.codebuddy.ai/docs/zh/cli/settings" target="_blank" theme="primary" size="small">查看文档</Link>
-            </div>
+
+          <div className="text-xs space-y-1" style={{ color: 'var(--td-text-color-placeholder)' }}>
+            <p>CodeBuddy CLI：<code style={{ backgroundColor: 'var(--td-bg-color-component)', padding: '2px 6px', borderRadius: 4 }}>codebuddy login</code></p>
+            <p>Agnes Key：<Link href="https://platform.agnes-ai.com/" target="_blank" theme="primary" size="small">platform.agnes-ai.com</Link></p>
           </div>
         </div>
 
@@ -357,13 +381,13 @@ export function SettingsPage({
                     <h4 className="text-base font-medium" style={{ color: 'var(--td-text-color-primary)' }}>{editingAgent ? '编辑 Agent' : '创建新 Agent'}</h4>
                     <Button variant="text" onClick={resetForm}>取消</Button>
                   </div>
-                  
+
                   <Form labelAlign="top">
                     <Form.FormItem label="名称" requiredMark>
-                      <Input value={formData.name} onChange={(v) => setFormData(prev => ({ ...prev, name: v as string }))} placeholder="例如：代码助手" />
+                      <Input value={formData.name} onChange={(v: any) => setFormData(prev => ({ ...prev, name: v }))} placeholder="例如：代码助手" />
                     </Form.FormItem>
                     <Form.FormItem label="描述">
-                      <Input value={formData.description} onChange={(v) => setFormData(prev => ({ ...prev, description: v as string }))} placeholder="简短描述" />
+                      <Input value={formData.description} onChange={(v: any) => setFormData(prev => ({ ...prev, description: v }))} placeholder="简短描述" />
                     </Form.FormItem>
                     <Form.FormItem label="图标和颜色">
                       <div className="flex gap-4">
@@ -384,7 +408,7 @@ export function SettingsPage({
                       </div>
                     </Form.FormItem>
                     <Form.FormItem label="权限模式">
-                      <Select value={formData.permissionMode} onChange={(v) => setFormData(prev => ({ ...prev, permissionMode: v as PermissionMode }))} style={{ width: '100%' }}>
+                      <Select value={formData.permissionMode} onChange={(v: any) => setFormData(prev => ({ ...prev, permissionMode: v as PermissionMode }))} style={{ width: '100%' }}>
                         {PERMISSION_MODES.map(mode => (
                           <Select.Option key={mode.value} value={mode.value} label={mode.label}>
                             <div className="flex flex-col py-1">
@@ -396,10 +420,10 @@ export function SettingsPage({
                       </Select>
                     </Form.FormItem>
                     <Form.FormItem label="系统提示词" requiredMark>
-                      <Textarea value={formData.systemPrompt} onChange={(v) => setFormData(prev => ({ ...prev, systemPrompt: v as string }))} placeholder="定义 Agent 的行为和能力..." autosize={{ minRows: 4, maxRows: 8 }} />
+                      <Textarea value={formData.systemPrompt} onChange={(v: any) => setFormData(prev => ({ ...prev, systemPrompt: v }))} placeholder="定义 Agent 的行为和能力..." autosize={{ minRows: 4, maxRows: 8 }} />
                     </Form.FormItem>
                   </Form>
-                  
+
                   <div className="flex justify-end gap-2 pt-2">
                     <Button variant="outline" onClick={resetForm}>取消</Button>
                     <Button theme="primary" onClick={handleSave}>{editingAgent ? '保存修改' : '创建 Agent'}</Button>
