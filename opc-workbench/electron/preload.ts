@@ -11,6 +11,16 @@ contextBridge.exposeInMainWorld('opc', {
   version: process.env.npm_package_version || '1.0.0',
   electron: true,
   homedir: os.homedir(),
+  update: {
+    check: () => ipcRenderer.invoke('update:check'),
+    download: () => ipcRenderer.invoke('update:download'),
+    install: () => ipcRenderer.invoke('update:install'),
+    onStatus: (callback: (data: unknown) => void) => {
+      const handler = (_event: unknown, data: unknown) => callback(data);
+      ipcRenderer.on('update-status', handler);
+      return () => ipcRenderer.removeListener('update-status', handler);
+    },
+  },
 });
 
 export {};

@@ -24,6 +24,8 @@ import {
 import { Bot, Sparkles, Code, FileText, Globe, Lightbulb } from 'lucide-react';
 import { CustomAgent, PermissionMode } from '../types';
 import { api } from '../api/client';
+import { useI18n, type Locale } from '../i18n';
+import { useUpdateChecker } from '../hooks/useUpdateChecker';
 
 interface SettingsPageProps {
   agents: CustomAgent[];
@@ -124,6 +126,12 @@ export function SettingsPage({
     openaiModel: '',
   });
   const [savingEnv, setSavingEnv] = useState(false);
+
+  // i18n
+  const { locale, setLocale } = useI18n();
+
+  // 自动更新
+  const { updateStatus, checkForUpdate, downloadUpdate, installUpdate } = useUpdateChecker();
 
   // 检查登录状态
   const checkLoginStatus = useCallback(async () => {
@@ -438,7 +446,73 @@ export function SettingsPage({
 
         <div style={{ height: '1px', backgroundColor: 'var(--td-component-border)' }} />
 
-        {/* Agent 配置 */}
+        {/* 语言切换 */}
+        <div>
+          <div className="mb-4">
+            <h2 className="text-lg font-medium" style={{ color: 'var(--td-text-color-primary)' }}>语言 / Language</h2>
+            <p className="text-sm mt-1" style={{ color: 'var(--td-text-color-secondary)' }}>选择界面语言 / Select interface language</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Select
+              value={locale}
+              onChange={(v: any) => setLocale(v as Locale)}
+              style={{ width: 200 }}
+            >
+              <Select.Option value="zh-CN" label="简体中文">
+                <span>简体中文</span>
+              </Select.Option>
+              <Select.Option value="en-US" label="English">
+                <span>English</span>
+              </Select.Option>
+            </Select>
+          </div>
+        </div>
+
+        <div style={{ height: '1px', backgroundColor: 'var(--td-component-border)' }} />
+
+        {/* 关于与更新 */}
+        <div>
+          <div className="mb-4">
+            <h2 className="text-lg font-medium" style={{ color: 'var(--td-text-color-primary)' }}>关于与更新</h2>
+            <p className="text-sm mt-1" style={{ color: 'var(--td-text-color-secondary)' }}>查看版本信息和检查更新</p>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <span className="text-sm" style={{ color: 'var(--td-text-color-secondary)' }}>当前版本：</span>
+              <Tag size="small" variant="outline">v{(window as any).opc?.version || '1.0.0'}</Tag>
+              {updateStatus.status === 'available' && (
+                <Tag size="small" theme="warning">新版本 v{updateStatus.version} 可用</Tag>
+              )}
+              {updateStatus.status === 'downloading' && (
+                <Tag size="small" theme="primary">下载中 {updateStatus.percent}%</Tag>
+              )}
+              {updateStatus.status === 'downloaded' && (
+                <Tag size="small" theme="success">已下载，可安装</Tag>
+              )}
+              {updateStatus.status === 'up-to-date' && (
+                <Tag size="small" theme="success">已是最新版</Tag>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                size="small"
+                variant="outline"
+                loading={updateStatus.status === 'checking'}
+                onClick={checkForUpdate}
+              >
+                检查更新
+              </Button>
+              {updateStatus.status === 'available' && (
+                <Button size="small" theme="primary" onClick={downloadUpdate}>下载更新</Button>
+              )}
+              {updateStatus.status === 'downloaded' && (
+                <Button size="small" theme="primary" onClick={installUpdate}>安装并重启</Button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ height: '1px', backgroundColor: 'var(--td-component-border)' }} />
         <div>
           <div className="mb-4">
             <h2 className="text-lg font-medium" style={{ color: 'var(--td-text-color-primary)' }}>Agent 配置</h2>

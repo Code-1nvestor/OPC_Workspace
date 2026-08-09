@@ -9,7 +9,8 @@
  * - 退出时：closeAllConnections() -> closeDb() -> tray.destroy() -> app.quit()
  */
 
-import { app, BrowserWindow, Tray, Menu, nativeImage } from 'electron';
+import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain } from 'electron';
+import { autoUpdater } from 'electron-updater';
 import * as path from 'path';
 import * as http from 'http';
 import * as fs from 'fs';
@@ -33,6 +34,64 @@ let tray: Tray | null = null;
 let expressServer: http.Server | null = null;
 let serverModule: any = null;
 let isQuitting = false;
+
+// ============= 自动更新（electron-updater） =============
+
+function setupAutoUpdater() {
+  autoUpdater.autoDownload = false;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on('checking-for-update', () => {
+    console.log('[AutoUpdater] Checking for update...');
+    sendToRenderer('update-status', { status: 'checking' });
+  });
+
+  autoUpdater.on('update-available', (info) => {
+    console.log('[AutoUpdater] Update available:', info.version);
+    sendToRenderer('update-status', { status: 'available', version: info.version, releaseNotes: info.releaseNotes });
+  });
+
+  autoUpdater.on('update-not-available', () => {
+    console.log('[AutoUpdater] Up to date');
+    sendToRenderer('update-status', { status: 'up-to-date' });
+  });
+
+  autoUpdater.on('download-progress', (progress) => {
+    sendToRenderer('update-status', { status: 'downloading', percent: Math.round(progress.percent) });
+  });
+
+  autoUpdater.on('update-downloaded', () => {
+    console.log('[AutoUpdater] Update downloaded');
+    sendToRenderer('update-status', { status: 'downloaded' });
+  });
+
+  autoUpdater.on('error', (err) => {
+    console.error('[AutoUpdater] Error:', err?.message);
+    sendToRenderer('update-status', { status: 'error', message: err?.message || 'Unknown error' });
+  });
+
+  // IPC: 手动检查更新
+  ipcMain.handle('update:check', () => {
+    autoUpdater.checkForUpdates().catch(() => {});
+  });
+
+  // IPC: 下载更新
+  ipcMain.handle('update:download', () => {
+    autoUpdater.downloadUpdate().catch(() => {});
+  });
+
+  // IPC: 安装并重启
+  ipcMain.handle('update:install', () => {
+    isQuitting = true;
+    autoUpdater.quitAndInstall();
+  });
+}
+
+function sendToRenderer(channel: string, data: unknown) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send(channel, data);
+  }
+}
 
 // ============= 单实例锁 =============
 const gotLock = app.requestSingleInstanceLock();
@@ -255,6 +314,11 @@ app.on('before-quit', async (e) => {
 app.whenReady().then(() => {
   createWindow();
   createTray();
+  setupAutoUpdater();
+  // 启动后延迟 10 秒检查更新（避免影响启动速度）
+  setTimeout(() => {
+    autoUpdater.checkForUpdates().catch(() => {});
+  }, 10000);
 });
 
 // 窗口全部关闭时不退出（常驻托盘）

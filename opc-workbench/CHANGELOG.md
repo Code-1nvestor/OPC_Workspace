@@ -2,6 +2,41 @@
 
 所有版本变更将记录在此文件中。
 
+## [1.1.0] - 2026-08-09
+
+### M7 扩展：跨平台打包 + i18n + 自动更新
+
+#### 跨平台打包
+- **macOS**: `electron-builder --mac` 生成 DMG（x64 + arm64）
+- **Linux**: `electron-builder --linux` 生成 AppImage + deb
+- **Windows**: 保持原有 portable target
+- **新增脚本**: `dist:win` / `dist:mac` / `dist:linux`
+- **publish 配置**: GitHub Releases 自动发布
+
+#### i18n 多语言
+- **轻量 i18n 模块**: 基于 React Context，零额外依赖，支持 zh-CN（默认）和 en-US
+- **`useI18n()` hook**: 提供 `t(key)` 翻译函数和 `locale` / `setLocale` 切换
+- **语言持久化**: 选择存入 localStorage，默认根据浏览器语言自动检测
+- **SettingsPage 语言切换 UI**: Select 下拉选择简体中文 / English
+- **翻译覆盖**: 侧边栏、设置页、聊天页、工具状态、托盘菜单等 40+ 条文案
+
+#### electron-updater 自动更新
+- **`electron/main.ts`**: 集成 `autoUpdater`，启动后 10 秒自动检查更新
+- **IPC 通道**: `update:check` / `update:download` / `update:install` + `update-status` 事件推送
+- **`preload.ts`**: 暴露 `window.opc.update` API（check/download/install/onStatus）
+- **`useUpdateChecker` hook**: 监听更新状态，通过 MessagePlugin 通知用户
+- **SettingsPage 更新 UI**: 版本号标签、检查更新按钮、下载进度、安装并重启按钮
+- **更新流程**: 检查 → 发现新版本 → 下载 → 安装并重启（quitAndInstall）
+
+### 新增文件
+
+- `src/i18n/index.tsx` - i18n 模块（Provider + useI18n hook + 翻译表）
+- `src/hooks/useUpdateChecker.ts` - 自动更新检查 hook
+
+### 依赖
+
+- 新增: `electron-updater` (^6.3.9)
+
 ## [1.0.3] - 2026-08-09
 
 ### Provider 切换自动重启
