@@ -10,7 +10,7 @@ import linksRouter from "./routes/links.js";
 import newsRouter from "./routes/news.js";
 import focusRouter from "./routes/focus.js";
 import { getProvider, getAvailableProviders, resetProviderCache } from "./providers/index.js";
-import { updateEnvFile, syncProcessEnv } from "./env-manager.js";
+import { updateEnvFile } from "./env-manager.js";
 
 interface PendingPermission {
   resolve: (result: { behavior: 'allow' | 'deny'; message?: string }) => void;
@@ -27,7 +27,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
@@ -303,8 +302,7 @@ app.post("/api/chat", async (req, res) => {
     const provider = getProvider();
 
     let fullResponse = "";
-    let toolCalls: Array<{ id: string; name: string; input?: Record<string, unknown>; status: string; result?: string; isError?: boolean }> = [];
-    let newSdkSessionId: string | null = null;
+    const toolCalls: Array<{ id: string; name: string; input?: Record<string, unknown>; status: string; result?: string; isError?: boolean }> = [];
 
     res.write(`data: ${JSON.stringify({ type: "init", sessionId: session.id, userMessageId, assistantMessageId, model: selectedModel })}\n\n`);
 
@@ -321,7 +319,6 @@ app.post("/api/chat", async (req, res) => {
       switch (event.type) {
         case 'init':
           if (event.sessionId && event.sessionId !== session.sdk_session_id) {
-            newSdkSessionId = event.sessionId;
             db.updateSession(session.id, { sdk_session_id: event.sessionId });
           }
           break;

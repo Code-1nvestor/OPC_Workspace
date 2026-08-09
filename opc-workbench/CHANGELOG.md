@@ -2,6 +2,39 @@
 
 所有版本变更将记录在此文件中。
 
+## [1.0.2] - 2026-08-09
+
+### 技术债清理
+
+- **TypeScript 全量 0 错误**: 修复前端 3 个文件遗留的 11 处 TS 报错（TDesign 组件属性、lucide 图标类型、Descriptions 用法等）
+- **ESLint 0 错误**: 清理前端/服务端遗留的 unused-vars、prefer-const、no-unused-expressions 等问题
+- **ESLint 配置迁移**: `.eslintrc.cjs` 迁移为 `eslint.config.mjs`（flat config），react-hooks 仅启用经典两条规则（`rules-of-hooks` / `exhaustive-deps`），避免 v7 激进规则误报
+
+### 工程化加固 (M5)
+
+- **package.json 新增脚本**:
+  - `typecheck` - `tsc --noEmit`
+  - `lint` / `lint:fix` - ESLint 检查/自动修复
+  - `format` / `format:check` - Prettier 格式化/校验
+  - `test` / `test:watch` - Vitest 单元测试
+- **单元测试**: 接入 Vitest，为 3 个 Provider 编写单测（mock fetch）
+  - `openai.test.ts` - SSE 流式解析、错误兜底、未配置 Key
+  - `anthropic.test.ts` - SSE 解析、请求头校验
+  - `index.test.ts` - Provider 工厂按 `LLM_PROVIDER` 路由、可用性列表（mock CodeBuddy SDK 认证）
+- **CI**: 新增 `.github/workflows/ci.yml`，推送/PR 时自动执行 typecheck + lint + test + build
+
+### 新增文件
+
+- `vitest.config.ts` - Vitest 配置
+- `server/providers/__tests__/openai.test.ts`
+- `server/providers/__tests__/anthropic.test.ts`
+- `server/providers/__tests__/index.test.ts`
+- `.github/workflows/ci.yml`
+
+### 依赖
+
+- 新增: `vitest`
+
 ## [1.0.1] - 2026-08-01
 
 ### 新增
@@ -32,7 +65,7 @@
 - `server/providers/anthropic.ts` - Anthropic (火山) Provider 实现
 - `server/providers/openai.ts` - OpenAI (Agnes) Provider 实现
 - `server/providers/index.ts` - Provider 工厂函数
-- `.eslintrc.cjs` - ESLint 配置
+- `eslint.config.mjs` - ESLint flat config 配置
 - `.prettierrc` - Prettier 配置
 - `CHANGELOG.md` - 变更记录
 

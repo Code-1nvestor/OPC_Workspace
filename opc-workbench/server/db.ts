@@ -69,7 +69,7 @@ try {
     db.exec("ALTER TABLE sessions ADD COLUMN sdk_session_id TEXT");
     console.log("[DB] Added sdk_session_id column to sessions table");
   }
-} catch (e) {
+} catch {
   // 忽略错误（列可能已存在）
 }
 

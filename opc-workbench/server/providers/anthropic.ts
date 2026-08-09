@@ -8,7 +8,7 @@
  * 支持流式输出 + 多轮上下文，纯文本对话（不含工具调用）。
  */
 
-import type { ChatProvider, ChatEvent, ChatParams, ProviderModel, ChatMessage } from './types';
+import type { ChatProvider, ChatEvent, ChatParams, ProviderModel } from './types';
 
 export class AnthropicProvider implements ChatProvider {
   id = 'anthropic';

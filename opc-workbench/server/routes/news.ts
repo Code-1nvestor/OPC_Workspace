@@ -13,15 +13,6 @@ const CACHE_TTL_MS = 10 * 60 * 1000;
 // 上游 API 基地址
 const AIHOT_BASE = 'https://aihot.virxact.com/api/public/items';
 
-// 分类 slug 映射
-const CATEGORY_SLUGS: Record<string, string> = {
-  'ai-models': 'ai-models',
-  'ai-products': 'ai-products',
-  'industry': 'industry',
-  'paper': 'paper',
-  'tip': 'tip',
-};
-
 interface AIHOTItem {
   id?: string;
   _id?: string;
