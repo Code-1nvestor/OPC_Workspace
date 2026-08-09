@@ -6,23 +6,23 @@ import {
   CheckCircleFilledIcon,
   CloseCircleFilledIcon,
 } from 'tdesign-icons-react';
-import { 
-  Terminal, 
-  Sparkles, 
-  Search, 
-  Globe, 
+import {
+  Terminal,
+  Sparkles,
+  Search,
+  Globe,
   Wrench,
   FileText,
-  Code,
   FolderSearch,
   Edit,
   Trash2,
   Eye,
   Image,
-  MessageSquare,
-  Database,
-  Settings,
-  Zap
+  Zap,
+  ListChecks,
+  Calendar,
+  Newspaper,
+  PlusCircle
 } from 'lucide-react';
 import { ToolCall } from '../types';
 
@@ -83,7 +83,24 @@ const getToolIcon = (toolName: string) => {
   if (name === 'task') {
     return { icon: Zap, color: '#faad14' };
   }
-  
+
+  // Agnes 内置工具
+  if (name === 'get_todos') {
+    return { icon: ListChecks, color: '#00a870' };
+  }
+  if (name === 'create_todo') {
+    return { icon: PlusCircle, color: '#0052d9' };
+  }
+  if (name === 'get_ongoing') {
+    return { icon: Zap, color: '#ed7b2f' };
+  }
+  if (name === 'get_countdowns') {
+    return { icon: Calendar, color: '#a25eb5' };
+  }
+  if (name === 'get_news') {
+    return { icon: Newspaper, color: '#1890ff' };
+  }
+
   // 默认图标
   return { icon: Wrench, color: 'var(--td-text-color-secondary)' };
 };
@@ -103,7 +120,12 @@ const getToolType = (toolName: string): string => {
   if (name === 'search' || name === 'grep' || name === 'listdir') return 'search';
   if (name === 'imagegen') return 'image';
   if (name === 'task') return 'task';
-  
+  if (name === 'get_todos') return 'todos';
+  if (name === 'create_todo') return 'create_todo';
+  if (name === 'get_ongoing') return 'ongoing';
+  if (name === 'get_countdowns') return 'countdowns';
+  if (name === 'get_news') return 'news';
+
   return 'other';
 };
 
@@ -172,7 +194,7 @@ export function ToolCallsCollapse({ toolCalls, isStreaming = false }: ToolCallsC
   }, [toolCalls.length, hasRunning, allCompleted, isStreaming]);
 
   // 渲染单个工具调用详情
-  const renderToolDetail = (tool: ToolCall, index: number) => {
+  const renderToolDetail = (tool: ToolCall, _index: number) => {
     const isRunning = tool.status === 'running';
     const isCompleted = tool.status === 'completed';
     const isError = tool.status === 'error' || tool.isError;
@@ -546,7 +568,113 @@ export function ToolCallsCollapse({ toolCalls, isStreaming = false }: ToolCallsC
         </div>
       );
     }
-    
+
+    // Agnes 内置工具渲染（get_todos / create_todo / get_ongoing / get_countdowns / get_news）
+    const agnesToolName = toolNameLower;
+    const isAgnesBuiltin = ['get_todos', 'create_todo', 'get_ongoing', 'get_countdowns', 'get_news'].includes(agnesToolName);
+
+    if (isAgnesBuiltin) {
+      // 尝试解析结果为 JSON
+      let parsedResult: any = null;
+      if (tool.result) {
+        try { parsedResult = JSON.parse(tool.result); } catch { /* 非 JSON */ }
+      }
+
+      // 工具标题映射
+      const titleMap: Record<string, string> = {
+        get_todos: '获取待办列表',
+        create_todo: '创建待办事项',
+        get_ongoing: '获取进行中事项',
+        get_countdowns: '获取倒计时列表',
+        get_news: '获取新闻资讯',
+      };
+      const title = titleMap[agnesToolName] || tool.name;
+
+      // create_todo 特殊：显示 title 参数
+      const todoTitle = agnesToolName === 'create_todo' ? (input.title as string) : '';
+
+      return (
+        <div
+          key={tool.id}
+          className="rounded-lg overflow-hidden transition-all"
+          style={{ backgroundColor: 'var(--td-bg-color-secondarycontainer)' }}
+        >
+          <div
+            className="flex items-center gap-2 px-3 py-2 cursor-pointer"
+            onClick={() => toggleToolExpanded(tool.id)}
+          >
+            {isRunning ? (
+              <Loading size="small" />
+            ) : isCompleted && !isError ? (
+              <CheckCircleFilledIcon style={{ color: 'var(--td-success-color)' }} />
+            ) : (
+              <CloseCircleFilledIcon style={{ color: 'var(--td-error-color)' }} />
+            )}
+            <ToolIcon size={16} style={{ color: iconColor }} />
+            <span className="flex-1 text-sm font-medium truncate" style={{ color: 'var(--td-text-color-primary)' }}>
+              {title}
+              {todoTitle && <span style={{ color: 'var(--td-brand-color)' }}> · {todoTitle}</span>}
+            </span>
+            <span className="text-xs" style={{ color: 'var(--td-text-color-placeholder)' }}>
+              {isRunning ? '执行中...' : isError ? '失败' : '完成'}
+            </span>
+            {tool.result && (
+              toolExpanded ? (
+                <ChevronUpIcon size={14} style={{ color: 'var(--td-text-color-placeholder)' }} />
+              ) : (
+                <ChevronDownIcon size={14} style={{ color: 'var(--td-text-color-placeholder)' }} />
+              )
+            )}
+          </div>
+
+          {/* 展开显示结果 */}
+          {toolExpanded && tool.result && parsedResult && Array.isArray(parsedResult) && (
+            <div
+              className="px-3 py-2 text-xs border-t max-h-48 overflow-y-auto"
+              style={{
+                borderColor: 'var(--td-component-stroke)',
+                backgroundColor: 'var(--td-bg-color-container)',
+              }}
+            >
+              {parsedResult.length === 0 ? (
+                <span style={{ color: 'var(--td-text-color-placeholder)' }}>（空列表）</span>
+              ) : (
+                <div className="space-y-1">
+                  {parsedResult.slice(0, 20).map((item: any, i: number) => (
+                    <div key={i} className="flex items-start gap-2" style={{ color: 'var(--td-text-color-secondary)' }}>
+                      <span style={{ color: 'var(--td-text-color-placeholder)', minWidth: 20 }}>{i + 1}.</span>
+                      <span className="flex-1 break-all">
+                        {typeof item === 'string' ? item : item?.title || item?.name || JSON.stringify(item).slice(0, 100)}
+                        {item?.done === 1 && <span style={{ color: 'var(--td-success-color)' }}> ✓</span>}
+                        {item?.progress != null && <span style={{ color: 'var(--td-text-color-placeholder)' }}> ({item.progress}%)</span>}
+                      </span>
+                    </div>
+                  ))}
+                  {parsedResult.length > 20 && (
+                    <div style={{ color: 'var(--td-text-color-placeholder)' }}>...共 {parsedResult.length} 条</div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 非 JSON 结果回退显示 */}
+          {toolExpanded && tool.result && !parsedResult && (
+            <div
+              className="px-3 py-2 text-xs font-mono whitespace-pre-wrap break-all max-h-32 overflow-y-auto border-t"
+              style={{
+                color: isError ? 'var(--td-error-color)' : 'var(--td-text-color-secondary)',
+                borderColor: 'var(--td-component-stroke)',
+                backgroundColor: 'var(--td-bg-color-container)',
+              }}
+            >
+              {tool.result.length > 500 ? tool.result.slice(0, 500) + '...' : tool.result}
+            </div>
+          )}
+        </div>
+      );
+    }
+
     // 默认工具渲染（其他工具）
     const formatInput = (inputObj: Record<string, unknown> | undefined) => {
       if (!inputObj || Object.keys(inputObj).length === 0) return null;

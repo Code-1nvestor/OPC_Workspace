@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Form,
   Input,
@@ -150,14 +150,26 @@ export function SettingsPage({
     } catch { /* ignore */ }
   }, []);
 
-  // 切换 Provider
+  // 切换 Provider（含自动重启 server）
+  const [restarting, setRestarting] = useState(false);
   const handleSwitchProvider = async (providerId: string) => {
     setSwitchingProvider(true);
     try {
       const result = await api.switchProvider(providerId);
       const providerName = result.providerName || providerId;
       const persistedText = result.persisted ? '，已持久化到 .env' : '';
-      MessagePlugin.success(`已切换到 ${providerName}，即时生效${persistedText}`);
+      MessagePlugin.success(`已切换到 ${providerName}，正在重启服务...`);
+      // 自动重启 server，确保全新状态
+      setRestarting(true);
+      try {
+        await api.restartServer();
+        MessagePlugin.success(`已切换到 ${providerName}，服务已重启${persistedText}`);
+      } catch {
+        // 重启失败不影响热重载（resetProviderCache 已生效）
+        MessagePlugin.warning(`已切换到 ${providerName}（热重载生效），但服务重启失败${persistedText}`);
+      } finally {
+        setRestarting(false);
+      }
       // 刷新 Provider 列表、登录状态、以及通知父组件刷新模型列表
       await Promise.all([fetchProviders(), checkLoginStatus()]);
       // 通过自定义事件通知 ChatPage / Sidebar 刷新模型列表
@@ -202,6 +214,42 @@ export function SettingsPage({
       MessagePlugin.error(error?.message || '保存失败');
     } finally {
       setSavingEnv(false);
+    }
+  };
+
+  // 设置导入/导出
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExportSettings = async () => {
+    try {
+      const data = await api.exportSettings();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `opc-workbench-settings-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      MessagePlugin.success('设置已导出（不含 API Key）');
+    } catch (error: any) {
+      MessagePlugin.error(error?.message || '导出失败');
+    }
+  };
+
+  const handleImportSettings = async (file: File) => {
+    setImporting(true);
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      const result = await api.importSettings(data);
+      MessagePlugin.success(result.message);
+      await Promise.all([checkLoginStatus(), fetchProviders()]);
+      window.dispatchEvent(new CustomEvent('provider-changed'));
+    } catch (error: any) {
+      MessagePlugin.error(error?.message || '导入失败');
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -320,7 +368,7 @@ export function SettingsPage({
                   </div>
                   <div className="flex items-center gap-2">
                     {p.available && !p.isCurrent && (
-                      <Button size="small" theme="primary" variant="outline" loading={switchingProvider} onClick={() => handleSwitchProvider(p.id)}>切换</Button>
+                      <Button size="small" theme="primary" variant="outline" loading={switchingProvider || restarting} onClick={() => handleSwitchProvider(p.id)}>{switchingProvider || restarting ? '切换中' : '切换'}</Button>
                     )}
                     {!p.available && <Tag size="small" variant="outline" style={{ color: 'var(--td-text-color-placeholder)' }}>未配置</Tag>}
                   </div>
@@ -367,6 +415,24 @@ export function SettingsPage({
           <div className="text-xs space-y-1" style={{ color: 'var(--td-text-color-placeholder)' }}>
             <p>CodeBuddy CLI：<code style={{ backgroundColor: 'var(--td-bg-color-component)', padding: '2px 6px', borderRadius: 4 }}>codebuddy login</code></p>
             <p>Agnes Key：<Link href="https://platform.agnes-ai.com/" target="_blank" theme="primary" size="small">platform.agnes-ai.com</Link></p>
+          </div>
+
+          {/* 设置导入/导出 */}
+          <div className="flex items-center gap-2 mt-4 pt-3" style={{ borderTop: '1px dashed var(--td-component-border)' }}>
+            <Button size="small" variant="outline" onClick={handleExportSettings}>导出设置</Button>
+            <Button size="small" variant="outline" loading={importing} onClick={() => fileInputRef.current?.click()}>导入设置</Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/json"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleImportSettings(file);
+                e.target.value = '';
+              }}
+            />
+            <span className="text-xs" style={{ color: 'var(--td-text-color-placeholder)' }}>导出不含 API Key，导入后需单独配置 Key</span>
           </div>
         </div>
 

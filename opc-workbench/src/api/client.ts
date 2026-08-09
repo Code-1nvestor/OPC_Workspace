@@ -107,6 +107,32 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ provider }),
     }),
+
+  // 重启 server
+  restartServer: () =>
+    request<{ success: boolean; port: number; message: string }>('/restart-server', {
+      method: 'POST',
+      body: JSON.stringify({}),
+    }),
+
+  // 设置导入/导出
+  exportSettings: () =>
+    request<{
+      version: number;
+      exportedAt: string;
+      provider: string;
+      providers: {
+        codebuddy: { apiKeyConfigured: boolean; internetEnv: string; baseUrl: string };
+        anthropic: { apiKeyConfigured: boolean; baseUrl: string; model: string };
+        openai: { apiKeyConfigured: boolean; baseUrl: string; model: string };
+      };
+    }>('/settings/export'),
+
+  importSettings: (data: Record<string, unknown>) =>
+    request<{ success: boolean; message: string; persisted: boolean; note: string }>('/settings/import', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 };
 
 export default api;

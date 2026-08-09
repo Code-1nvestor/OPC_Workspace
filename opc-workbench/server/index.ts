@@ -10,7 +10,7 @@ import linksRouter from "./routes/links.js";
 import newsRouter from "./routes/news.js";
 import focusRouter from "./routes/focus.js";
 import { getProvider, getAvailableProviders, resetProviderCache } from "./providers/index.js";
-import { updateEnvFile } from "./env-manager.js";
+import { updateEnvFile, readEnvFile } from "./env-manager.js";
 
 interface PendingPermission {
   resolve: (result: { behavior: 'allow' | 'deny'; message?: string }) => void;
@@ -78,6 +78,103 @@ app.post("/api/providers/switch", (req, res) => {
     message: `已切换到 ${newProvider.name}，即时生效`,
     persisted: true,
   });
+});
+
+// ============= 重启 Server（Provider 切换后确保全新状态） =============
+
+app.post("/api/restart-server", async (req, res) => {
+  try {
+    const port = await restartServer();
+    res.json({ success: true, port, message: 'Server 已重启' });
+  } catch (error: any) {
+    res.status(500).json({ error: error?.message || '重启失败' });
+  }
+});
+
+// ============= 设置导入/导出 =============
+
+app.get("/api/settings/export", (req, res) => {
+  try {
+    const envConfig = readEnvFile();
+    // 过滤敏感信息：导出时不包含实际的 API Key 值，只标注是否已配置
+    const exportData = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      provider: envConfig.LLM_PROVIDER || 'codebuddy',
+      providers: {
+        codebuddy: {
+          apiKeyConfigured: !!(envConfig.CODEBUDDY_API_KEY || envConfig.CODEBUDDY_AUTH_TOKEN),
+          internetEnv: envConfig.CODEBUDDY_INTERNET_ENVIRONMENT || '',
+          baseUrl: envConfig.CODEBUDDY_BASE_URL || '',
+        },
+        anthropic: {
+          apiKeyConfigured: !!envConfig.ANTHROPIC_API_KEY,
+          baseUrl: envConfig.ANTHROPIC_BASE_URL || '',
+          model: envConfig.ANTHROPIC_MODEL || 'glm-5.2',
+        },
+        openai: {
+          apiKeyConfigured: !!envConfig.OPENAI_API_KEY,
+          baseUrl: envConfig.OPENAI_BASE_URL || 'https://apihub.agnes-ai.com/v1',
+          model: envConfig.OPENAI_MODEL || 'agnes-2.0-flash',
+        },
+      },
+    };
+    res.json(exportData);
+  } catch (error: any) {
+    res.status(500).json({ error: error?.message || '导出失败' });
+  }
+});
+
+app.post("/api/settings/import", (req, res) => {
+  try {
+    const { provider, providers } = req.body;
+    const envUpdates: Record<string, string | undefined> = {};
+
+    if (provider) envUpdates['LLM_PROVIDER'] = provider;
+
+    if (providers?.codebuddy) {
+      const cb = providers.codebuddy;
+      if (cb.internetEnv) envUpdates['CODEBUDDY_INTERNET_ENVIRONMENT'] = cb.internetEnv;
+      if (cb.baseUrl) envUpdates['CODEBUDDY_BASE_URL'] = cb.baseUrl;
+    }
+
+    if (providers?.anthropic) {
+      const an = providers.anthropic;
+      if (an.baseUrl) envUpdates['ANTHROPIC_BASE_URL'] = an.baseUrl;
+      if (an.model) envUpdates['ANTHROPIC_MODEL'] = an.model;
+    }
+
+    if (providers?.openai) {
+      const oi = providers.openai;
+      if (oi.baseUrl) envUpdates['OPENAI_BASE_URL'] = oi.baseUrl;
+      if (oi.model) envUpdates['OPENAI_MODEL'] = oi.model;
+    }
+
+    // 同步到 process.env
+    for (const [key, value] of Object.entries(envUpdates)) {
+      if (value !== undefined) process.env[key] = value;
+    }
+
+    // 持久化到 .env
+    let persisted = false;
+    try {
+      updateEnvFile(envUpdates);
+      persisted = true;
+    } catch (err: any) {
+      console.warn('[env-manager] 写入 .env 失败:', err?.message);
+    }
+
+    resetProviderCache();
+
+    res.json({
+      success: true,
+      message: `设置已导入${persisted ? '（已持久化到 .env）' : '（仅当前进程有效）'}`,
+      persisted,
+      note: 'API Key 不会导入，需在目标机器上单独配置',
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error?.message || '导入失败' });
+  }
 });
 
 // ============= 登录检测（兼容原接口） =============
@@ -408,6 +505,8 @@ if (process.env.OPC_EMBEDDED === '1') {
 
 export { closeDb } from './db.js';
 
+let activeServer: import('http').Server | null = null;
+
 export function startServer(port?: number) {
   const listenPort =
     typeof port === 'number' ? port : Number(process.env.PORT) || 3000;
@@ -417,7 +516,37 @@ export function startServer(port?: number) {
     const providerName = getProvider().name;
     console.log(`\n  API server started at http://localhost:${actualPort}\n  Database: SQLite (${process.env.OPC_DB_PATH || 'data/opc.db'})\n  LLM Provider: ${providerName}\n`);
   });
+  activeServer = server;
   return server;
+}
+
+/** 重启 Express server（用于 Provider 切换后确保全新状态） */
+export async function restartServer(): Promise<number> {
+  if (!activeServer) {
+    return startServer().address() && typeof activeServer?.address() === 'object'
+      ? (activeServer!.address() as any).port
+      : 3000;
+  }
+  const addr = activeServer.address();
+  const oldPort = typeof addr === 'object' && addr ? addr.port : Number(process.env.PORT) || 3000;
+
+  // 关闭旧 server
+  await new Promise<void>((resolve) => {
+    const anyServer = activeServer as any;
+    if (typeof anyServer.closeAllConnections === 'function') {
+      anyServer.closeAllConnections();
+    }
+    activeServer!.close(() => resolve());
+  });
+  activeServer = null;
+
+  // 重新启动
+  const newServer = app.listen(oldPort, () => {
+    const providerName = getProvider().name;
+    console.log(`\n  API server restarted at http://localhost:${oldPort}\n  LLM Provider: ${providerName}\n`);
+  });
+  activeServer = newServer;
+  return oldPort;
 }
 
 const isMain = import.meta.url === `file://${process.argv[1]}` || process.env.OPC_DIRECT_RUN === '1';

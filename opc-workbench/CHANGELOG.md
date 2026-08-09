@@ -2,6 +2,34 @@
 
 所有版本变更将记录在此文件中。
 
+## [1.0.3] - 2026-08-09
+
+### Provider 切换自动重启
+
+- **`/api/restart-server` 端点**: 新增 `restartServer()` 导出函数，关闭旧 Express 实例后重新 `app.listen` 同端口
+- **SettingsPage 联动**: 切换 Provider 后自动调用 `api.restartServer()`，确保全新 server 状态；重启失败时回退到热重载（`resetProviderCache` 已生效）
+- **UI 反馈**: 切换按钮显示"切换中"状态，成功后提示"服务已重启"
+
+### 工具调用结果 UI 可视化
+
+- **Agnes 5 个内置工具专属渲染**: `get_todos` / `create_todo` / `get_ongoing` / `get_countdowns` / `get_news` 在 `ToolCallsCollapse` 中有了专属图标和展示
+  - 智能解析 JSON 结果：列表数据自动编号展示，支持 `title` / `done` / `progress` 等字段格式化
+  - `create_todo` 显示 `title` 参数摘要
+  - 非 JSON 结果回退为纯文本展示
+  - 每个工具有独立颜色和 lucide 图标（ListChecks / PlusCircle / Zap / Calendar / Newspaper）
+
+### 设置导入/导出
+
+- **`GET /api/settings/export`**: 导出当前 Provider 配置为 JSON（**不含 API Key**，只标注 `apiKeyConfigured` 布尔值）
+- **`POST /api/settings/import`**: 导入 Provider 配置（baseUrl / model / internetEnv 等），同步 `process.env` + 持久化 `.env` + 热重载
+- **SettingsPage UI**: 新增"导出设置"和"导入设置"按钮，导入通过隐藏 file input 选择 JSON 文件
+
+### 新增端点
+
+- `POST /api/restart-server` - 重启 Express server
+- `GET /api/settings/export` - 导出设置（不含 Key）
+- `POST /api/settings/import` - 导入设置
+
 ## [1.0.2] - 2026-08-09
 
 ### 技术债清理
