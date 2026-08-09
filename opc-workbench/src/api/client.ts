@@ -103,7 +103,7 @@ export const api = {
     current: string;
   }>('/providers'),
   switchProvider: (provider: string) =>
-    request<{ success: boolean; provider: string; message: string }>('/providers/switch', {
+    request<{ success: boolean; provider: string; providerName?: string; message: string; persisted?: boolean }>('/providers/switch', {
       method: 'POST',
       body: JSON.stringify({ provider }),
     }),

@@ -10,6 +10,7 @@ import linksRouter from "./routes/links.js";
 import newsRouter from "./routes/news.js";
 import focusRouter from "./routes/focus.js";
 import { getProvider, getAvailableProviders, resetProviderCache } from "./providers/index.js";
+import { updateEnvFile, syncProcessEnv } from "./env-manager.js";
 
 interface PendingPermission {
   resolve: (result: { behavior: 'allow' | 'deny'; message?: string }) => void;
@@ -59,9 +60,25 @@ app.post("/api/providers/switch", (req, res) => {
   if (!valid.includes(provider)) {
     return res.status(400).json({ error: `无效的 provider，支持: ${valid.join(', ')}` });
   }
+  // 1. 更新 process.env（即时生效）
   process.env.LLM_PROVIDER = provider;
+  // 2. 持久化到 .env 文件（重启后生效）
+  try {
+    updateEnvFile({ LLM_PROVIDER: provider });
+  } catch (err: any) {
+    // .env 写入失败不影响热切换，但需告知用户
+    console.warn('[env-manager] 写入 .env 失败:', err?.message);
+  }
+  // 3. 重置 Provider 缓存（热重载：下次 getProvider() 会创建新 Provider 实例）
   resetProviderCache();
-  res.json({ success: true, provider, message: `已切换到 ${provider}` });
+  const newProvider = getProvider();
+  res.json({
+    success: true,
+    provider,
+    providerName: newProvider.name,
+    message: `已切换到 ${newProvider.name}，即时生效`,
+    persisted: true,
+  });
 });
 
 // ============= 登录检测（兼容原接口） =============
@@ -95,31 +112,44 @@ app.post("/api/save-env-config", (req, res) => {
           openaiApiKey, openaiBaseUrl, openaiModel } = req.body;
 
   const configuredVars: string[] = [];
+  const envUpdates: Record<string, string | undefined> = {};
 
   // CodeBuddy 配置
-  if (apiKey) { process.env.CODEBUDDY_API_KEY = apiKey; configuredVars.push('CODEBUDDY_API_KEY'); }
-  if (authToken) { process.env.CODEBUDDY_AUTH_TOKEN = authToken; configuredVars.push('CODEBUDDY_AUTH_TOKEN'); }
-  if (internetEnv) { process.env.CODEBUDDY_INTERNET_ENVIRONMENT = internetEnv; configuredVars.push('CODEBUDDY_INTERNET_ENVIRONMENT'); }
-  if (baseUrl) { process.env.CODEBUDDY_BASE_URL = baseUrl; configuredVars.push('CODEBUDDY_BASE_URL'); }
+  if (apiKey !== undefined) { process.env.CODEBUDDY_API_KEY = apiKey; envUpdates['CODEBUDDY_API_KEY'] = apiKey || undefined; configuredVars.push('CODEBUDDY_API_KEY'); }
+  if (authToken !== undefined) { process.env.CODEBUDDY_AUTH_TOKEN = authToken; envUpdates['CODEBUDDY_AUTH_TOKEN'] = authToken || undefined; configuredVars.push('CODEBUDDY_AUTH_TOKEN'); }
+  if (internetEnv) { process.env.CODEBUDDY_INTERNET_ENVIRONMENT = internetEnv; envUpdates['CODEBUDDY_INTERNET_ENVIRONMENT'] = internetEnv; configuredVars.push('CODEBUDDY_INTERNET_ENVIRONMENT'); }
+  if (baseUrl) { process.env.CODEBUDDY_BASE_URL = baseUrl; envUpdates['CODEBUDDY_BASE_URL'] = baseUrl; configuredVars.push('CODEBUDDY_BASE_URL'); }
 
   // Provider 选择
-  if (llmProvider) { process.env.LLM_PROVIDER = llmProvider; configuredVars.push('LLM_PROVIDER'); }
+  if (llmProvider) { process.env.LLM_PROVIDER = llmProvider; envUpdates['LLM_PROVIDER'] = llmProvider; configuredVars.push('LLM_PROVIDER'); }
 
   // Anthropic 配置
-  if (anthropicApiKey) { process.env.ANTHROPIC_API_KEY = anthropicApiKey; configuredVars.push('ANTHROPIC_API_KEY'); }
-  if (anthropicBaseUrl) { process.env.ANTHROPIC_BASE_URL = anthropicBaseUrl; configuredVars.push('ANTHROPIC_BASE_URL'); }
-  if (anthropicModel) { process.env.ANTHROPIC_MODEL = anthropicModel; configuredVars.push('ANTHROPIC_MODEL'); }
+  if (anthropicApiKey !== undefined) { process.env.ANTHROPIC_API_KEY = anthropicApiKey; envUpdates['ANTHROPIC_API_KEY'] = anthropicApiKey || undefined; configuredVars.push('ANTHROPIC_API_KEY'); }
+  if (anthropicBaseUrl) { process.env.ANTHROPIC_BASE_URL = anthropicBaseUrl; envUpdates['ANTHROPIC_BASE_URL'] = anthropicBaseUrl; configuredVars.push('ANTHROPIC_BASE_URL'); }
+  if (anthropicModel) { process.env.ANTHROPIC_MODEL = anthropicModel; envUpdates['ANTHROPIC_MODEL'] = anthropicModel; configuredVars.push('ANTHROPIC_MODEL'); }
 
   // OpenAI/Agnes 配置
-  if (openaiApiKey) { process.env.OPENAI_API_KEY = openaiApiKey; configuredVars.push('OPENAI_API_KEY'); }
-  if (openaiBaseUrl) { process.env.OPENAI_BASE_URL = openaiBaseUrl; configuredVars.push('OPENAI_BASE_URL'); }
-  if (openaiModel) { process.env.OPENAI_MODEL = openaiModel; configuredVars.push('OPENAI_MODEL'); }
+  if (openaiApiKey !== undefined) { process.env.OPENAI_API_KEY = openaiApiKey; envUpdates['OPENAI_API_KEY'] = openaiApiKey || undefined; configuredVars.push('OPENAI_API_KEY'); }
+  if (openaiBaseUrl) { process.env.OPENAI_BASE_URL = openaiBaseUrl; envUpdates['OPENAI_BASE_URL'] = openaiBaseUrl; configuredVars.push('OPENAI_BASE_URL'); }
+  if (openaiModel) { process.env.OPENAI_MODEL = openaiModel; envUpdates['OPENAI_MODEL'] = openaiModel; configuredVars.push('OPENAI_MODEL'); }
 
+  // 持久化到 .env 文件
+  let persisted = false;
+  try {
+    updateEnvFile(envUpdates);
+    persisted = true;
+  } catch (err: any) {
+    console.warn('[env-manager] 写入 .env 失败:', err?.message);
+  }
+
+  // 重置缓存，热重载
   resetProviderCache();
+
   res.json({
     success: true,
-    message: `已设置: ${configuredVars.join(', ')}`,
-    note: '环境变量仅在当前服务器进程有效，重启后需要重新设置',
+    message: `已设置: ${configuredVars.join(', ')}${persisted ? '（已持久化到 .env）' : '（仅当前进程有效，.env 写入失败）'}`,
+    persisted,
+    note: persisted ? '配置已保存，重启后仍然生效' : '环境变量仅在当前进程有效，重启后需要重新设置',
   });
 });
 

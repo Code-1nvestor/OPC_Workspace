@@ -70,6 +70,20 @@ export function ChatPage({
     });
   }, []);
 
+  // 监听 Provider 切换事件，重新检查登录状态
+  useEffect(() => {
+    const handleProviderChanged = () => {
+      setLoginStatus({ checked: false, isLoggedIn: false });
+      api.checkLogin().then(res => {
+        setLoginStatus({ checked: true, isLoggedIn: res.isLoggedIn, error: res.error, providerId: (res as any).providerId, providerName: (res as any).providerName });
+      }).catch(() => {
+        setLoginStatus({ checked: true, isLoggedIn: false, error: '无法连接服务器' });
+      });
+    };
+    window.addEventListener('provider-changed', handleProviderChanged);
+    return () => window.removeEventListener('provider-changed', handleProviderChanged);
+  }, []);
+
   // 自动滚动到底部
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

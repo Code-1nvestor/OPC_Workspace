@@ -154,9 +154,14 @@ export function SettingsPage({
   const handleSwitchProvider = async (providerId: string) => {
     setSwitchingProvider(true);
     try {
-      await api.switchProvider(providerId);
-      MessagePlugin.success('已切换到 ' + providerId);
+      const result = await api.switchProvider(providerId);
+      const providerName = result.providerName || providerId;
+      const persistedText = result.persisted ? '，已持久化到 .env' : '';
+      MessagePlugin.success(`已切换到 ${providerName}，即时生效${persistedText}`);
+      // 刷新 Provider 列表、登录状态、以及通知父组件刷新模型列表
       await Promise.all([fetchProviders(), checkLoginStatus()]);
+      // 通过自定义事件通知 ChatPage / Sidebar 刷新模型列表
+      window.dispatchEvent(new CustomEvent('provider-changed', { detail: { providerId, providerName } }));
     } catch (error: any) {
       MessagePlugin.error(error?.message || '切换失败');
     } finally {
@@ -184,11 +189,12 @@ export function SettingsPage({
       const data = await response.json();
 
       if (data.success) {
-        MessagePlugin.success(data.message);
+        const persistedText = data.persisted ? '（已持久化到 .env）' : '';
+        MessagePlugin.success(data.message || `配置已保存${persistedText}`);
         setShowEnvConfig(false);
         setEnvConfig({ apiKey: '', authToken: '', anthropicApiKey: '', anthropicModel: '', openaiApiKey: '', openaiModel: '' });
-        checkLoginStatus();
-        fetchProviders();
+        await Promise.all([checkLoginStatus(), fetchProviders()]);
+        window.dispatchEvent(new CustomEvent('provider-changed'));
       } else {
         MessagePlugin.error(data.error || '保存失败');
       }
@@ -286,7 +292,7 @@ export function SettingsPage({
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-lg font-medium" style={{ color: 'var(--td-text-color-primary)' }}>LLM Provider</h2>
-              <p className="text-sm mt-1" style={{ color: 'var(--td-text-color-secondary)' }}>选择和配置 AI 模型提供方</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--td-text-color-secondary)' }}>选择和配置 AI 模型提供方，切换即时生效</p>
             </div>
             <Button variant="text" icon={<RefreshIcon />} onClick={() => { checkLoginStatus(); fetchProviders(); }} loading={loginStatus.checking}>刷新</Button>
           </div>
