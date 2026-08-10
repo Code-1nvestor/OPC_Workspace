@@ -4,12 +4,12 @@
 
 import { useVisiblePolling } from '../hooks/useVisiblePolling';
 import { api } from '../api/client';
-import { Button, DatePicker, Input, Dialog, MessagePlugin, Popconfirm } from 'tdesign-react';
+import { Button, DatePicker, Input, MessagePlugin, Popconfirm } from 'tdesign-react';
 import { Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
-export default function CountdownModule({ onRefresh }: { onRefresh?: () => void }) {
-  const { data, loading, refresh, setData } = useVisiblePolling(
+export default function CountdownModule({ onRefresh: _onRefresh }: { onRefresh?: () => void }) {
+  const { data, loading, setData } = useVisiblePolling(
     () => api.getCountdowns(),
     { interval: 60000 }
   );

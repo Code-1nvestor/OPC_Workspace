@@ -63,7 +63,11 @@ export class CodeBuddyProvider implements ChatProvider {
         return { behavior: 'allow' as const, updatedInput: input };
       }
       if (requestPermission) {
-        return requestPermission(toolName, input, options.toolUseID);
+        const result = await requestPermission(toolName, input, options.toolUseID);
+        if (result.behavior === 'allow') {
+          return { behavior: 'allow' as const, updatedInput: input };
+        }
+        return { behavior: 'deny' as const, message: result.message || '用户拒绝了此操作' };
       }
       return { behavior: 'deny' as const, message: '未配置权限回调' };
     };
@@ -98,10 +102,11 @@ export class CodeBuddyProvider implements ChatProvider {
             if (block.type === 'text') {
               yield { type: 'text', content: block.text };
             } else if (block.type === 'tool_use') {
-              currentToolId = block.id || crypto.randomUUID();
+              const toolId = block.id || crypto.randomUUID();
+              currentToolId = toolId;
               yield {
                 type: 'tool',
-                id: currentToolId,
+                id: toolId,
                 name: block.name,
                 input: (block as any).input || {},
               };

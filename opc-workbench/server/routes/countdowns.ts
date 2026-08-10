@@ -5,7 +5,7 @@ import * as db from '../db.js';
 const router = Router();
 
 // GET /api/countdowns
-router.get('/', (req, res) => {
+router.get('/', (_req, res) => {
   try {
     res.json({ countdowns: db.getAllCountdowns() });
   } catch (error: any) {

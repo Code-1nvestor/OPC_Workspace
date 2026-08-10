@@ -2,6 +2,47 @@
 
 所有版本变更将记录在此文件中。
 
+## [1.1.1] - 2026-08-10
+
+### 上线就绪加固
+
+#### 🔴 阻塞项修复
+- **删除残留备份文件**: 移除 `server/index.ts.v1_backup`（空文件，旧版代码残留）
+- **删除硬编码测试脚本**: 移除 `_test-m3.cjs`（含硬编码绝对路径，无法跨机器运行）
+- **清理临时文件**: 移除 `vitest.config.ts.timestamp-*.mjs`、`_zip_tmp/` 目录
+
+#### 🟡 工程化加固
+- **Express 全局错误处理中间件**: 捕获未处理异常，防止连接挂起；SSE 已开始写入时不覆盖响应
+- **404 兜底中间件**: API 路径返回 JSON 错误，非 API 路径由 SPA fallback 处理
+- **Rate Limiting**: 接入 `express-rate-limit`，每分钟 120 次请求上限，跳过 SSE 长连接（`/api/chat`）
+- **TypeScript 类型检查加固**: `npm run typecheck` 现在同时检查 `src/` 和 `server/ + electron/`（`tsc --noEmit -p tsconfig.node.json`）
+- **tsconfig.node.json 修复**: 移除 `composite: true`（与 `--noEmit` 冲突），添加 `noEmit: true` 和 `lib`/`types` 配置
+- **根 tsconfig 移除 references**: 避免 project reference 强制 composite 约束
+
+#### 测试覆盖提升
+- **新增 `server/__tests__/db.test.ts`**: 8 个 describe 块，覆盖 sessions/messages/todos/ongoing/countdowns/links/focus/news_cache 全部 CRUD 操作
+- 使用 `:memory:` SQLite 避免影响生产数据
+- 包含边界测试：progress 值 clamp 到 0-100
+
+#### 文档更新
+- **README.md 全面重写**: 项目结构、特性列表、快速开始、打包发布、测试命令、环境要求
+
+## [1.1.2] - 2026-08-10
+
+### 打包修复与产物生成
+
+#### electron-builder 配置修复
+- **`build.linux.target`**: `"AppImage"` → `"appImage"`（camelCase，修复 schema 验证失败）
+- **`build.appImage`**: 同步修复 key 名
+- **`build.win.signAndEditExecutable: false`**: 跳过 winCodeSign 下载，避免 Windows 符号链接权限问题
+- **`package.json`**: 新增 `description` 和 `author` 字段
+- **图标生成**: 生成合规 256×256 ICO 文件（`scripts/gen-icon.cjs`）
+
+#### 打包产物
+- **`OPC-Workbench-1.0.0-portable.exe`** (136.5 MB) — Windows portable
+- **`OPC-Workbench-1.0.0-win-x64.zip`** (173.8 MB) — 完整分发包
+- 产物验证: app.asar + better_sqlite3.node + express + @tencent-ai/agent-sdk + Chromium DLL 全部包含
+
 ## [1.1.0] - 2026-08-09
 
 ### M7 扩展：跨平台打包 + i18n + 自动更新

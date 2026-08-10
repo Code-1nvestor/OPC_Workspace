@@ -5,16 +5,15 @@
 import { useVisiblePolling } from '../hooks/useVisiblePolling';
 import { api } from '../api/client';
 import { Checkbox, Input, Button, Popconfirm, MessagePlugin } from 'tdesign-react';
-import { Plus, Trash2, CheckCircle2 } from 'lucide-react';
-import { useState, useRef } from 'react';
+import { Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 
-export default function TodoModule({ onRefresh }: { onRefresh?: () => void }) {
+export default function TodoModule({ onRefresh: _onRefresh }: { onRefresh?: () => void }) {
   const { data, loading, refresh, setData } = useVisiblePolling(
     () => api.getTodos(),
     { interval: 30000 }
   );
   const [newTodo, setNewTodo] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const todos = data?.todos || [];
   const activeTodos = todos.filter(t => !t.done);

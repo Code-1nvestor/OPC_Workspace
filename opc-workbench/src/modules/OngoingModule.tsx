@@ -4,12 +4,11 @@
 
 import { useVisiblePolling } from '../hooks/useVisiblePolling';
 import { api } from '../api/client';
-import { Progress, Slider, Button, Input, Textarea, Dialog, MessagePlugin } from 'tdesign-react';
-import { PlusIcon, DeleteIcon } from 'tdesign-icons-react';
+import { Progress, Slider, Button, Input, Textarea, MessagePlugin } from 'tdesign-react';
 import { Trash2, Plus } from 'lucide-react';
 import { useState } from 'react';
 
-export default function OngoingModule({ onRefresh }: { onRefresh?: () => void }) {
+export default function OngoingModule({ onRefresh: _onRefresh }: { onRefresh?: () => void }) {
   const { data, loading, refresh, setData } = useVisiblePolling(
     () => api.getOngoing(),
     { interval: 60000 }

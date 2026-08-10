@@ -142,8 +142,8 @@ export function useChat(options: UseChatOptions) {
       const decoder = new TextDecoder();
       let fullContent = '';
       let usedModel = selectedModel;
-      let currentToolCalls: ToolCall[] = [];
-      let contentBlocks: ContentBlock[] = [];
+      const currentToolCalls: ToolCall[] = [];
+      const contentBlocks: ContentBlock[] = [];
       let currentTextBlock: string = '';
       let realSessionId: string = sessionId!;
       let realAssistantMessageId = tempAssistantMessageId;

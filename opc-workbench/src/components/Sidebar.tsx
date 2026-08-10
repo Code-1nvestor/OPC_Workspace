@@ -21,7 +21,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({
-  sessions, currentSessionId, isSettingsPage, isDashboard, sidebarOpen, agents, getAgent,
+  sessions, currentSessionId, isSettingsPage, isDashboard, sidebarOpen, getAgent,
   onNewChat, onSelectSession, onDeleteSession, onOpenSettings, onOpenDashboard,
 }: SidebarProps) {
   return (

@@ -28,8 +28,8 @@ export interface ChatParams {
   message: string;
   /** 历史消息（不含当前消息，用于多轮上下文） */
   history?: ChatMessage[];
-  /** 模型 ID */
-  model: string;
+  /** 模型 ID（可选，Provider 内部有默认值） */
+  model?: string;
   /** 系统提示词 */
   systemPrompt?: string;
   /** 工作目录（CodeBuddy 专用） */

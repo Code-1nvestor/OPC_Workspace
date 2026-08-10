@@ -1,4 +1,5 @@
-import express from "express";
+import express, { type Request, type Response, type NextFunction } from "express";
+import rateLimit from "express-rate-limit";
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -30,6 +31,19 @@ const app = express();
 
 app.use(express.json());
 
+// ============= Rate Limiting =============
+// 本地内嵌模式风险低，但若端口暴露仍需防护
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 分钟
+  max: 120, // 每分钟最多 120 次请求
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: '请求过于频繁，请稍后再试' },
+  // 跳过 SSE 流式接口（聊天需要长连接）
+  skip: (req) => req.path === '/api/chat',
+});
+app.use('/api/', apiLimiter);
+
 // ============= OPC 工作台路由 =============
 app.use('/api/todos', todosRouter);
 app.use('/api/ongoing', ongoingRouter);
@@ -38,13 +52,13 @@ app.use('/api/links', linksRouter);
 app.use('/api/news', newsRouter);
 app.use('/api/focus', focusRouter);
 
-app.get("/api/health", (req, res) => {
+app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
 // ============= Provider 状态 =============
 
-app.get("/api/providers", async (req, res) => {
+app.get("/api/providers", async (_req, res) => {
   try {
     const providers = await getAvailableProviders();
     res.json({ providers, current: process.env.LLM_PROVIDER || 'codebuddy' });
@@ -82,7 +96,7 @@ app.post("/api/providers/switch", (req, res) => {
 
 // ============= 重启 Server（Provider 切换后确保全新状态） =============
 
-app.post("/api/restart-server", async (req, res) => {
+app.post("/api/restart-server", async (_req, res) => {
   try {
     const port = await restartServer();
     res.json({ success: true, port, message: 'Server 已重启' });
@@ -93,7 +107,7 @@ app.post("/api/restart-server", async (req, res) => {
 
 // ============= 设置导入/导出 =============
 
-app.get("/api/settings/export", (req, res) => {
+app.get("/api/settings/export", (_req, res) => {
   try {
     const envConfig = readEnvFile();
     // 过滤敏感信息：导出时不包含实际的 API Key 值，只标注是否已配置
@@ -179,7 +193,7 @@ app.post("/api/settings/import", (req, res) => {
 
 // ============= 登录检测（兼容原接口） =============
 
-app.get("/api/check-login", async (req, res) => {
+app.get("/api/check-login", async (_req, res) => {
   const provider = getProvider();
   try {
     const available = await provider.isAvailable();
@@ -251,7 +265,7 @@ app.post("/api/save-env-config", (req, res) => {
 
 // ============= 模型列表 =============
 
-app.get("/api/models", async (req, res) => {
+app.get("/api/models", async (_req, res) => {
   try {
     const provider = getProvider();
     const models = await provider.getModels();
@@ -268,7 +282,7 @@ app.get("/api/models", async (req, res) => {
 
 // ============= 会话管理 =============
 
-app.get("/api/sessions", (req, res) => {
+app.get("/api/sessions", (_req, res) => {
   try {
     const sessions = db.getAllSessions();
     const sessionsWithMessages = sessions.map(session => ({ ...session, messageCount: db.getMessagesBySession(session.id).length }));
@@ -490,6 +504,21 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
+// ============= 全局错误处理中间件 =============
+// 必须放在所有路由之后，Express 按注册顺序匹配
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  console.error('[Express] Unhandled error:', err);
+  if (res.headersSent) return; // SSE 已开始写入，无法再发 JSON
+  res.status(500).json({ error: err.message || '服务器内部错误' });
+});
+
+// 404 兜底
+app.use((req: Request, res: Response) => {
+  if (req.path.startsWith('/api/')) {
+    res.status(404).json({ error: '接口不存在' });
+  }
+});
+
 // ============= 生产模式静态托管（Electron 内嵌时） =============
 if (process.env.OPC_EMBEDDED === '1') {
   const distPath = path.join(__dirname, '..', 'dist');
@@ -523,9 +552,10 @@ export function startServer(port?: number) {
 /** 重启 Express server（用于 Provider 切换后确保全新状态） */
 export async function restartServer(): Promise<number> {
   if (!activeServer) {
-    return startServer().address() && typeof activeServer?.address() === 'object'
-      ? (activeServer!.address() as any).port
-      : 3000;
+    const server = startServer();
+    await new Promise<void>((resolve) => server.once('listening', () => resolve()));
+    const addr = server.address();
+    return typeof addr === 'object' && addr ? addr.port : 3000;
   }
   const addr = activeServer.address();
   const oldPort = typeof addr === 'object' && addr ? addr.port : Number(process.env.PORT) || 3000;

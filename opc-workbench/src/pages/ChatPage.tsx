@@ -5,7 +5,6 @@ import { NewChatView } from '../components/NewChatView';
 import { ChatMessages } from '../components/ChatMessages';
 import { ChatInput } from '../components/ChatInput';
 import { api } from '../api/client';
-import { Button } from 'tdesign-react';
 import { KeyRound, AlertCircle } from 'lucide-react';
 
 interface ChatPageProps {

@@ -5,7 +5,7 @@ import * as db from '../db.js';
 const router = Router();
 
 // GET /api/focus - 获取完成记录 + 今日统计
-router.get('/', (req, res) => {
+router.get('/', (_req, res) => {
   try {
     const sessions = db.getAllFocusSessions();
     const todayCount = db.getTodayFocusCount();

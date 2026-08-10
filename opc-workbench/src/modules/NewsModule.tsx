@@ -18,9 +18,9 @@ const CATEGORIES = [
   { key: 'tip', label: '技巧' },
 ];
 
-export default function NewsModule({ onRefresh }: { onRefresh?: () => void }) {
+export default function NewsModule({ onRefresh: _onRefresh }: { onRefresh?: () => void }) {
   const [category, setCategory] = useState('all');
-  const { data, loading, refresh } = useVisiblePolling(
+  const { data, loading } = useVisiblePolling(
     () => api.getNews({ category, since: 168 }),
     { interval: 600000 } // 10 分钟（与后端缓存同步）
   );

@@ -5,7 +5,7 @@ import * as db from '../db.js';
 const router = Router();
 
 // GET /api/ongoing
-router.get('/', (req, res) => {
+router.get('/', (_req, res) => {
   try {
     res.json({ items: db.getAllOngoing() });
   } catch (error: any) {

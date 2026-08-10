@@ -10,7 +10,7 @@ import { useVisiblePolling } from '../hooks/useVisiblePolling';
 
 const FOCUS_DURATION = 25 * 60; // 25 分钟 = 1500 秒
 
-export default function FocusModule({ onRefresh }: { onRefresh?: () => void }) {
+export default function FocusModule({ onRefresh: _onRefresh }: { onRefresh?: () => void }) {
   const [secondsLeft, setSecondsLeft] = useState(FOCUS_DURATION);
   const [isRunning, setIsRunning] = useState(false);
   const [phase, setPhase] = useState<'idle' | 'focusing' | 'done'>('idle');

@@ -4,12 +4,12 @@
 
 import { useVisiblePolling } from '../hooks/useVisiblePolling';
 import { api } from '../api/client';
-import { Button, Input, Dialog, MessagePlugin, Popconfirm } from 'tdesign-react';
-import { Plus, Trash2, ExternalLink } from 'lucide-react';
+import { Button, Input, MessagePlugin, Popconfirm } from 'tdesign-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
-export default function LinksModule({ onRefresh }: { onRefresh?: () => void }) {
-  const { data, loading, refresh, setData } = useVisiblePolling(
+export default function LinksModule({ onRefresh: _onRefresh }: { onRefresh?: () => void }) {
+  const { data, loading, setData } = useVisiblePolling(
     () => api.getLinks(),
     { interval: 120000 }
   );
