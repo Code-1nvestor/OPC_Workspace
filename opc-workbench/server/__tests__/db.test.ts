@@ -8,7 +8,6 @@ import * as db from '../db.js';
 import { v4 as uuidv4 } from 'uuid';
 
 // 使用临时数据库路径，避免影响生产数据
-process.env.OPC_DB_PATH = `:memory:`;
 
 describe('DB: Sessions', () => {
   beforeAll(() => {

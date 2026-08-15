@@ -10,6 +10,7 @@ import countdownsRouter from "./routes/countdowns.js";
 import linksRouter from "./routes/links.js";
 import newsRouter from "./routes/news.js";
 import focusRouter from "./routes/focus.js";
+import backupRouter from "./routes/backup.js";
 import { getProvider, getAvailableProviders, resetProviderCache } from "./providers/index.js";
 import { updateEnvFile, readEnvFile } from "./env-manager.js";
 
@@ -51,6 +52,7 @@ app.use('/api/countdowns', countdownsRouter);
 app.use('/api/links', linksRouter);
 app.use('/api/news', newsRouter);
 app.use('/api/focus', focusRouter);
+app.use('/api/backup', backupRouter);
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });

@@ -487,4 +487,37 @@ export function setNewsCache(key: string, payload: string): void {
     .run(key, payload, Date.now());
 }
 
+// ============= 备份/恢复辅助函数 =============
+
+export function getTodoById(id: string): Todo | undefined {
+  return db.prepare('SELECT * FROM todos WHERE id = ?').get(id) as Todo | undefined;
+}
+
+export function getOngoingById(id: string): OngoingItem | undefined {
+  return db.prepare('SELECT * FROM ongoing_items WHERE id = ?').get(id) as OngoingItem | undefined;
+}
+
+export function getCountdownById(id: string): Countdown | undefined {
+  return db.prepare('SELECT * FROM countdowns WHERE id = ?').get(id) as Countdown | undefined;
+}
+
+export function getLinkById(id: string): Link | undefined {
+  return db.prepare('SELECT * FROM links WHERE id = ?').get(id) as Link | undefined;
+}
+
+export function getFocusById(id: string): FocusSession | undefined {
+  return db.prepare('SELECT * FROM focus_sessions WHERE id = ?').get(id) as FocusSession | undefined;
+}
+
+/** 清空全部业务表（备份导入 replace 模式使用；保留 sessions/messages 聊天记录） */
+export function clearBusinessData(): void {
+  db.exec(`
+    DELETE FROM todos;
+    DELETE FROM ongoing_items;
+    DELETE FROM countdowns;
+    DELETE FROM links;
+    DELETE FROM focus_sessions;
+  `);
+}
+
 export default db;

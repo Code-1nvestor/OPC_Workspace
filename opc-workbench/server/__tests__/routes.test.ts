@@ -9,7 +9,6 @@ import { v4 as uuidv4 } from 'uuid';
 import * as db from '../db.js';
 
 // 必须在 import db 之后、任何 CRUD 之前设置；本文件独立 worker，db 模块在此进程内是新的
-process.env.OPC_DB_PATH = ':memory:';
 
 import todosRouter from '../routes/todos.js';
 import focusRouter from '../routes/focus.js';

@@ -261,6 +261,40 @@ export function SettingsPage({
     }
   };
 
+  // ============= 数据备份/恢复 =============
+  const [backupImporting, setBackupImporting] = useState(false);
+  const backupFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExportBackup = async () => {
+    try {
+      const data = await api.exportBackup();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `opc-workbench-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      MessagePlugin.success('数据备份已导出');
+    } catch (error: any) {
+      MessagePlugin.error(error?.message || '导出失败');
+    }
+  };
+
+  const handleImportBackup = async (file: File, mode: 'merge' | 'replace') => {
+    setBackupImporting(true);
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      const result = await api.importBackup(data, mode);
+      MessagePlugin.success(result.message);
+    } catch (error: any) {
+      MessagePlugin.error(error?.message || '导入失败');
+    } finally {
+      setBackupImporting(false);
+    }
+  };
+
   useEffect(() => {
     checkLoginStatus();
     fetchProviders();
@@ -441,6 +475,25 @@ export function SettingsPage({
               }}
             />
             <span className="text-xs" style={{ color: 'var(--td-text-color-placeholder)' }}>{t('settings.exportHint')}</span>
+          </div>
+
+          {/* 数据备份/恢复 */}
+          <div className="flex items-center gap-2 mt-4 pt-3" style={{ borderTop: '1px dashed var(--td-component-border)' }}>
+            <span className="text-sm font-medium" style={{ color: 'var(--td-text-color-secondary)' }}>{t('backup.title')}:</span>
+            <Button size="small" variant="outline" onClick={handleExportBackup}>{t('backup.export')}</Button>
+            <Button size="small" variant="outline" loading={backupImporting} onClick={() => backupFileInputRef.current?.click()}>{t('backup.import')}</Button>
+            <input
+              ref={backupFileInputRef}
+              type="file"
+              accept="application/json"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleImportBackup(file, 'merge');
+                e.target.value = '';
+              }}
+            />
+            <span className="text-xs" style={{ color: 'var(--td-text-color-placeholder)' }}>{t('backup.hint')}</span>
           </div>
         </div>
 

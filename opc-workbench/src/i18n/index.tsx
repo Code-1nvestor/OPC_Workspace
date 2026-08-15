@@ -62,6 +62,11 @@ const zhCN: TranslationDict = {
   'settings.upToDate': '已是最新版',
   'settings.downloadUpdate': '下载更新',
   'settings.installRestart': '安装并重启',
+  // 数据备份
+  'backup.title': '数据备份',
+  'backup.export': '导出数据',
+  'backup.import': '导入数据',
+  'backup.hint': '备份全部业务数据（待办/进行中/倒计时/链接/番茄钟），导入默认合并',
   // 聊天页
   'chat.needProvider': '聊天功能需要配置 LLM Provider',
   'chat.workbenchUnaffected': '工作台功能不受影响，可正常使用',
@@ -266,6 +271,11 @@ const enUS: TranslationDict = {
   'settings.upToDate': 'Up to date',
   'settings.downloadUpdate': 'Download Update',
   'settings.installRestart': 'Install & Restart',
+  // Data backup
+  'backup.title': 'Data Backup',
+  'backup.export': 'Export Data',
+  'backup.import': 'Import Data',
+  'backup.hint': 'Backs up all business data (todos/ongoing/countdowns/links/focus); import merges by default',
   // Chat
   'chat.needProvider': 'Chat requires an LLM Provider to be configured',
   'chat.workbenchUnaffected': 'Workbench features are unaffected',

@@ -133,6 +133,25 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+
+  // 数据备份/恢复
+  exportBackup: () =>
+    request<{
+      version: number;
+      exportedAt: string;
+      app: string;
+      todos: any[];
+      ongoing: any[];
+      countdowns: any[];
+      links: any[];
+      focus: any[];
+    }>('/backup/export'),
+
+  importBackup: (backup: Record<string, unknown>, mode: 'merge' | 'replace') =>
+    request<{ success: boolean; mode: string; stats: Record<string, number>; message: string }>('/backup/import', {
+      method: 'POST',
+      body: JSON.stringify({ backup, mode }),
+    }),
 };
 
 export default api;
