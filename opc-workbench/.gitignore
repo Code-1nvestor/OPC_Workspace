@@ -48,3 +48,6 @@ npm-debug.log*
 
 # Local temp / test build artifacts
 tmp/
+
+# Vitest 临时配置（每次运行生成）
+vitest.config.ts.timestamp-*.mjs
