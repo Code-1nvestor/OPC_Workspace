@@ -15,7 +15,8 @@ export function useTheme() {
     } else {
       document.documentElement.classList.remove('dark');
     }
-    localStorage.setItem(STORAGE_KEY, theme);
+    // 注意：不在此处持久化，否则初次渲染就会写入 localStorage，
+    // 导致「系统主题变化跟随」逻辑（见下方 mediaQuery listener）永远失效。
   }, [theme]);
 
   useEffect(() => {
@@ -30,7 +31,12 @@ export function useTheme() {
   }, []);
 
   const toggleTheme = useCallback(() => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    setTheme(prev => {
+      const next = prev === 'light' ? 'dark' : 'light';
+      // 手动切换属于用户显式选择，持久化；此后系统主题变化不再覆盖
+      localStorage.setItem(STORAGE_KEY, next);
+      return next;
+    });
   }, []);
 
   return { theme, setTheme, toggleTheme };
