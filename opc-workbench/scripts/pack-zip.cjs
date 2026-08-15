@@ -7,7 +7,8 @@ const path = require('path');
 
 const src = path.join(__dirname, '..', 'release-packaged');
 const tmpCopy = path.join(__dirname, '..', '_zip_tmp');
-const zipOut = path.join(__dirname, '..', 'OPC-Workbench-1.0.0-win-x64.zip');
+const pkg = require('../package.json');
+const zipOut = path.join(__dirname, '..', `OPC-Workbench-${pkg.version}-win-x64.zip`);
 
 if (!fs.existsSync(src)) {
   console.error('missing release-packaged/, run scripts/assemble-release.cjs first');

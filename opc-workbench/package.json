@@ -1,6 +1,6 @@
 {
   "name": "opc-workbench",
-  "version": "1.0.0",
+  "version": "1.1.2",
   "description": "一人公司工作台 — 本地 AI 助手桌面应用",
   "author": "OPC Workbench",
   "type": "module",
@@ -107,6 +107,12 @@
           "arch": [
             "x64"
           ]
+        },
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "build/icon.ico",
@@ -114,6 +120,12 @@
     },
     "portable": {
       "artifactName": "OPC-Workbench-${version}-portable.exe"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "OPC-Workbench-${version}-setup.exe"
     },
     "mac": {
       "target": [

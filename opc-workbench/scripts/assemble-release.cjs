@@ -9,7 +9,8 @@ const fs = require('fs');
 const path = require('path');
 
 const electronDist = path.join(__dirname, '..', 'node_modules', 'electron', 'dist');
-const srcWin = path.join(__dirname, '..', 'release-1.0.0-x64', 'win-unpacked');
+const pkg = require('../package.json');
+const srcWin = path.join(__dirname, '..', `release-${pkg.version}-x64`, 'win-unpacked');
 const dst = path.join(__dirname, '..', 'release-packaged');
 
 if (!fs.existsSync(electronDist)) { console.error('no electron dist'); process.exit(1); }
