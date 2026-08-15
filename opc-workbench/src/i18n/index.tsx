@@ -67,6 +67,35 @@ const zhCN: TranslationDict = {
   // 托盘
   'tray.open': '打开工作台',
   'tray.quit': '退出',
+  // Header
+  'header.dashboard': '工作台',
+  'header.settings': '设置',
+  'header.themeToDark': '切换到深色模式',
+  'header.themeToLight': '切换到浅色模式',
+  'header.refreshModels': '刷新模型列表',
+  // Sidebar
+  'sidebar.dashboardEntry': '工作台',
+  // ChatInput / 权限模式
+  'chat.inputPlaceholder': '输入消息...',
+  'chat.selectModel': '选择模型',
+  'perm.default': '默认模式',
+  'perm.defaultShort': '默认',
+  'perm.defaultDesc': '每次操作都需要确认',
+  'perm.acceptEdits': '自动编辑',
+  'perm.acceptEditsShort': '自动编辑',
+  'perm.acceptEditsDesc': '自动允许文件编辑操作',
+  'perm.plan': '仅规划',
+  'perm.planShort': '仅规划',
+  'perm.planDesc': '只生成计划，不执行操作',
+  'perm.bypass': '绕过权限',
+  'perm.bypassShort': '绕过',
+  'perm.bypassDesc': '允许所有操作，不做确认',
+  // Dashboard
+  'dashboard.title': '工作台',
+  'dashboard.refreshAll': '全部刷新',
+  'dashboard.refresh': '刷新',
+  'dashboard.refreshAllTooltip': '刷新全部模块',
+  'dashboard.refreshTooltip': '刷新',
 };
 
 const enUS: TranslationDict = {
@@ -120,6 +149,35 @@ const enUS: TranslationDict = {
   // Tray
   'tray.open': 'Open Workbench',
   'tray.quit': 'Quit',
+  // Header
+  'header.dashboard': 'Dashboard',
+  'header.settings': 'Settings',
+  'header.themeToDark': 'Switch to dark mode',
+  'header.themeToLight': 'Switch to light mode',
+  'header.refreshModels': 'Refresh model list',
+  // Sidebar
+  'sidebar.dashboardEntry': 'Dashboard',
+  // ChatInput / Permission modes
+  'chat.inputPlaceholder': 'Type a message...',
+  'chat.selectModel': 'Select model',
+  'perm.default': 'Default mode',
+  'perm.defaultShort': 'Default',
+  'perm.defaultDesc': 'Confirm every operation',
+  'perm.acceptEdits': 'Auto-edit',
+  'perm.acceptEditsShort': 'Auto-edit',
+  'perm.acceptEditsDesc': 'Automatically allow file edits',
+  'perm.plan': 'Plan only',
+  'perm.planShort': 'Plan',
+  'perm.planDesc': 'Generate plan only, no execution',
+  'perm.bypass': 'Bypass permissions',
+  'perm.bypassShort': 'Bypass',
+  'perm.bypassDesc': 'Allow all operations without confirmation',
+  // Dashboard
+  'dashboard.title': 'Dashboard',
+  'dashboard.refreshAll': 'Refresh all',
+  'dashboard.refresh': 'Refresh',
+  'dashboard.refreshAllTooltip': 'Refresh all modules',
+  'dashboard.refreshTooltip': 'Refresh',
 };
 
 const DICTS: Record<Locale, TranslationDict> = {

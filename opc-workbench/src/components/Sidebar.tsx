@@ -4,6 +4,7 @@ import { Bot, LayoutGrid } from 'lucide-react';
 import { APP_CONFIG } from '../config';
 import { Session, Agent } from '../types';
 import { ICON_MAP } from '../utils/iconMap';
+import { useI18n } from '../i18n';
 
 interface SidebarProps {
   sessions: Session[];
@@ -24,6 +25,7 @@ export function Sidebar({
   sessions, currentSessionId, isSettingsPage, isDashboard, sidebarOpen, getAgent,
   onNewChat, onSelectSession, onDeleteSession, onOpenSettings, onOpenDashboard,
 }: SidebarProps) {
+  const { t } = useI18n();
   return (
     <aside
       className="flex flex-col flex-shrink-0 transition-all duration-300 overflow-hidden"
@@ -51,13 +53,13 @@ export function Sidebar({
           onMouseLeave={(e) => { if (!isDashboard) e.currentTarget.style.backgroundColor = 'transparent'; }}
         >
           <LayoutGrid size={16} color="currentColor" />
-          <span className="text-sm font-medium">工作台</span>
+          <span className="text-sm font-medium">{t('sidebar.dashboardEntry')}</span>
         </div>
       </div>
 
       {/* 新对话按钮 */}
       <div className="px-3 pb-1">
-        <Button icon={<AddIcon />} onClick={onNewChat} block variant="outline">新对话</Button>
+        <Button icon={<AddIcon />} onClick={onNewChat} block variant="outline">{t('sidebar.newChat')}</Button>
       </div>
 
       {/* 会话列表 */}
@@ -81,7 +83,7 @@ export function Sidebar({
                 <AgentIcon size={12} color="white" />
               </div>
               <span className="flex-1 truncate text-sm">{session.title}</span>
-              <Tooltip content="删除会话">
+              <Tooltip content={t('sidebar.deleteSession')}>
                 <Button className="opacity-0 group-hover:opacity-100 transition-opacity" variant="text" shape="circle" size="medium" icon={<DeleteIcon />} onClick={(e) => { e.stopPropagation(); onDeleteSession(session.id); }} />
               </Tooltip>
             </div>
@@ -90,7 +92,7 @@ export function Sidebar({
       </div>
 
       <div className="p-3 border-t flex-shrink-0" style={{ borderColor: 'var(--td-component-border)' }}>
-        <Button icon={<SettingIcon />} onClick={onOpenSettings} block variant={isSettingsPage ? 'outline' : 'text'} theme={isSettingsPage ? 'primary' : 'default'}>设置</Button>
+        <Button icon={<SettingIcon />} onClick={onOpenSettings} block variant={isSettingsPage ? 'outline' : 'text'} theme={isSettingsPage ? 'primary' : 'default'}>{t('sidebar.settings')}</Button>
       </div>
     </aside>
   );

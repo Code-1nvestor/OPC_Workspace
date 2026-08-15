@@ -4,6 +4,7 @@ import { Bot, LayoutGrid } from 'lucide-react';
 import { APP_CONFIG } from '../config';
 import { Model, Session, Agent, Theme } from '../types';
 import { ICON_MAP } from '../utils/iconMap';
+import { useI18n } from '../i18n';
 
 interface HeaderProps {
   isSettingsPage: boolean;
@@ -19,6 +20,7 @@ interface HeaderProps {
 }
 
 export function Header({ isSettingsPage, isDashboard, sidebarOpen, theme, currentSession, currentAgent, models, onToggleSidebar, onToggleTheme, onRefreshModels }: HeaderProps) {
+  const { t } = useI18n();
   const formatModelName = (modelId: string) => {
     const model = models.find(m => m.modelId === modelId);
     const name = model?.name || modelId;
@@ -35,7 +37,7 @@ export function Header({ isSettingsPage, isDashboard, sidebarOpen, theme, curren
               <LayoutGrid size={14} color="var(--td-brand-color)" />
             </div>
             <h1 className="text-base font-semibold" style={{ color: 'var(--td-text-color-primary)' }}>
-              工作台
+              {t('header.dashboard')}
             </h1>
           </div>
         ) : (
@@ -46,7 +48,7 @@ export function Header({ isSettingsPage, isDashboard, sidebarOpen, theme, curren
               </div>
             )}
             <h1 className="text-base font-semibold" style={{ color: 'var(--td-text-color-primary)' }}>
-              {isSettingsPage ? '设置' : (currentSession?.title || APP_CONFIG.name)}
+              {isSettingsPage ? t('header.settings') : (currentSession?.title || APP_CONFIG.name)}
             </h1>
             {!isSettingsPage && currentSession && (
               <Tag size="small" variant="outline">{formatModelName(currentSession.model)}</Tag>
@@ -55,11 +57,11 @@ export function Header({ isSettingsPage, isDashboard, sidebarOpen, theme, curren
         )}
       </div>
       <div className="flex items-center gap-2">
-        <Tooltip content={theme === 'light' ? '切换到深色模式' : '切换到浅色模式'}>
+        <Tooltip content={theme === 'light' ? t('header.themeToDark') : t('header.themeToLight')}>
           <Button variant="outline" shape="circle" icon={theme === 'light' ? <MoonIcon /> : <SunnyIcon />} onClick={onToggleTheme} />
         </Tooltip>
         {!isSettingsPage && !isDashboard && (
-          <Tooltip content="刷新模型列表">
+          <Tooltip content={t('header.refreshModels')}>
             <Button variant="outline" shape="circle" icon={<RefreshIcon />} onClick={onRefreshModels} />
           </Tooltip>
         )}

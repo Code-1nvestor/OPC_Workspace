@@ -8,8 +8,10 @@ import { Button, Tooltip } from 'tdesign-react';
 import { RefreshIcon } from 'tdesign-icons-react';
 import * as Icons from 'lucide-react';
 import { moduleRegistry, ModuleComponentProps } from '../modules/registry';
+import { useI18n } from '../i18n';
 
 export function DashboardPage() {
+  const { t } = useI18n();
   const [refreshKeys, setRefreshKeys] = useState<Record<string, number>>({});
 
   const triggerRefresh = useCallback((moduleId: string) => {
@@ -25,15 +27,15 @@ export function DashboardPage() {
       {/* 顶部操作栏 */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold" style={{ color: 'var(--td-text-color-primary)' }}>
-          工作台
+          {t('dashboard.title')}
         </h2>
-        <Tooltip content="刷新全部模块">
+        <Tooltip content={t('dashboard.refreshAllTooltip')}>
           <Button
             variant="outline"
             icon={<RefreshIcon />}
             onClick={refreshAll}
           >
-            全部刷新
+            {t('dashboard.refreshAll')}
           </Button>
         </Tooltip>
       </div>
@@ -76,7 +78,7 @@ export function DashboardPage() {
                     {mod.title}
                   </h3>
                 </div>
-                <Tooltip content="刷新">
+                <Tooltip content={t('dashboard.refreshTooltip')}>
                   <Button
                     variant="text"
                     shape="circle"
