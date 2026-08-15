@@ -545,7 +545,7 @@ export function ToolCallsCollapse({ toolCalls, isStreaming = false }: ToolCallsC
               </div>
               {content && (
                 <div>
-                  <span style={{ color: 'var(--td-text-color-placeholder)' }}>内容:</span>
+                  <span style={{ color: 'var(--td-text-color-placeholder)' }}>{t('tool.content')}</span>
                   <pre className="mt-1 whitespace-pre-wrap">
                     {content.length > 1000 ? content.slice(0, 1000) + '...' : content}
                   </pre>

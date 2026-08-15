@@ -428,7 +428,7 @@ export function SettingsPage({
           {/* 设置导入/导出 */}
           <div className="flex items-center gap-2 mt-4 pt-3" style={{ borderTop: '1px dashed var(--td-component-border)' }}>
             <Button size="small" variant="outline" onClick={handleExportSettings}>{t('settings.exportSettings')}</Button>
-            <Button size="small" variant="outline" loading={importing} onClick={() => fileInputRef.current?.click()}>导入设置</Button>
+            <Button size="small" variant="outline" loading={importing} onClick={() => fileInputRef.current?.click()}>{t('settings.importSettings')}</Button>
             <input
               ref={fileInputRef}
               type="file"
@@ -515,8 +515,8 @@ export function SettingsPage({
         <div style={{ height: '1px', backgroundColor: 'var(--td-component-border)' }} />
         <div>
           <div className="mb-4">
-            <h2 className="text-lg font-medium" style={{ color: 'var(--td-text-color-primary)' }}>Agent 配置</h2>
-            <p className="text-sm mt-1" style={{ color: 'var(--td-text-color-secondary)' }}>创建和管理自定义 Agent</p>
+            <h2 className="text-lg font-medium" style={{ color: 'var(--td-text-color-primary)' }}>{t('settings.agentConfig')}</h2>
+            <p className="text-sm mt-1" style={{ color: 'var(--td-text-color-secondary)' }}>{t('settings.agentConfigDesc')}</p>
           </div>
 
           <div className="space-y-6">
@@ -579,7 +579,7 @@ export function SettingsPage({
             ) : (
               <>
                 <div>
-                  <h4 className="text-sm font-medium mb-3" style={{ color: 'var(--td-text-color-secondary)' }}>快速创建</h4>
+                  <h4 className="text-sm font-medium mb-3" style={{ color: 'var(--td-text-color-secondary)' }}>{t('settings.quickCreate')}</h4>
                   <div className="grid grid-cols-2 gap-3">
                     {PRESET_TEMPLATES.map(template => {
                       const Icon = getIconComponent(template.icon);
@@ -599,10 +599,10 @@ export function SettingsPage({
                     })}
                   </div>
                 </div>
-                <Button icon={<AddIcon />} variant="dashed" block onClick={() => setIsCreating(true)}>从头创建 Agent</Button>
+                <Button icon={<AddIcon />} variant="dashed" block onClick={() => setIsCreating(true)}>{t('settings.createAgent')}</Button>
                 {customAgents.length > 0 && (
                   <div>
-                    <h4 className="text-sm font-medium mb-3" style={{ color: 'var(--td-text-color-secondary)' }}>我的 Agent ({customAgents.length})</h4>
+                    <h4 className="text-sm font-medium mb-3" style={{ color: 'var(--td-text-color-secondary)' }}>{t('settings.myAgents')} ({customAgents.length})</h4>
                     <div className="space-y-2">
                       {customAgents.map(agent => {
                         const Icon = getIconComponent(agent.icon || 'Bot');
