@@ -292,6 +292,17 @@ db.exec(`
     payload TEXT NOT NULL,
     fetched_at INTEGER NOT NULL
   );
+
+  -- 快捷笔记
+  CREATE TABLE IF NOT EXISTS notes (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    content TEXT,
+    color TEXT,
+    pinned INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
 `);
 
 // ============= Todos CRUD =============
@@ -517,7 +528,51 @@ export function clearBusinessData(): void {
     DELETE FROM countdowns;
     DELETE FROM links;
     DELETE FROM focus_sessions;
+    DELETE FROM notes;
   `);
+}
+
+// ============= Notes CRUD =============
+
+export interface Note {
+  id: string;
+  title: string;
+  content: string | null;
+  color: string | null;
+  pinned: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export function getAllNotes(): Note[] {
+  return db.prepare('SELECT * FROM notes ORDER BY pinned DESC, updated_at DESC').all() as Note[];
+}
+
+export function getNoteById(id: string): Note | undefined {
+  return db.prepare('SELECT * FROM notes WHERE id = ?').get(id) as Note | undefined;
+}
+
+export function createNote(note: Note): Note {
+  db.prepare('INSERT INTO notes (id, title, content, color, pinned, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+    .run(note.id, note.title, note.content, note.color, note.pinned, note.created_at, note.updated_at);
+  return note;
+}
+
+export function updateNote(id: string, updates: Partial<Pick<Note, 'title' | 'content' | 'color' | 'pinned'>>): boolean {
+  const fields: string[] = [];
+  const values: any[] = [];
+  if (updates.title !== undefined) { fields.push('title = ?'); values.push(updates.title); }
+  if (updates.content !== undefined) { fields.push('content = ?'); values.push(updates.content); }
+  if (updates.color !== undefined) { fields.push('color = ?'); values.push(updates.color); }
+  if (updates.pinned !== undefined) { fields.push('pinned = ?'); values.push(updates.pinned); }
+  if (fields.length === 0) return false;
+  fields.push('updated_at = ?'); values.push(new Date().toISOString());
+  values.push(id);
+  return db.prepare(`UPDATE notes SET ${fields.join(', ')} WHERE id = ?`).run(...values).changes > 0;
+}
+
+export function deleteNote(id: string): boolean {
+  return db.prepare('DELETE FROM notes WHERE id = ?').run(id).changes > 0;
 }
 
 export default db;

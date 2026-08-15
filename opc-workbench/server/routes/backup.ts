@@ -1,7 +1,7 @@
 /**
  * 数据备份/恢复路由
  *
- * GET  /api/backup/export  - 导出全部业务数据为 JSON（todos/ongoing/countdowns/links/focus）
+ * GET  /api/backup/export  - 导出全部业务数据为 JSON（todos/ongoing/countdowns/links/focus/notes）
  * POST /api/backup/import  - 导入备份（mode=merge 合并 | mode=replace 清空后重建）
  */
 import { Router } from 'express';
@@ -12,6 +12,7 @@ import {
   getAllCountdowns, createCountdown, getCountdownById,
   getAllLinks, createLink, getLinkById,
   getAllFocusSessions, createFocusSession, getFocusById,
+  getAllNotes, createNote, getNoteById,
   clearBusinessData,
 } from '../db.js';
 
@@ -30,6 +31,7 @@ router.get('/export', (_req, res) => {
       countdowns: getAllCountdowns(),
       links: getAllLinks(),
       focus: getAllFocusSessions(),
+      notes: getAllNotes(),
     };
     res.json(backup);
   } catch (error: any) {
@@ -49,7 +51,7 @@ router.post('/import', (req, res) => {
       return res.status(400).json({ error: 'mode 仅支持 merge 或 replace' });
     }
 
-    const stats = { todos: 0, ongoing: 0, countdowns: 0, links: 0, focus: 0 };
+    const stats = { todos: 0, ongoing: 0, countdowns: 0, links: 0, focus: 0, notes: 0 };
 
     if (mode === 'replace') {
       // 清空业务表（不删 sessions/messages，聊天记录独立保留）
@@ -143,7 +145,26 @@ router.post('/import', (req, res) => {
       }
     }
 
-    res.json({ success: true, mode, stats, message: `导入完成：待办 ${stats.todos}、进行中 ${stats.ongoing}、倒计时 ${stats.countdowns}、链接 ${stats.links}、番茄钟 ${stats.focus}` });
+    // 快捷笔记
+    if (Array.isArray(backup.notes)) {
+      for (const n of backup.notes) {
+        if (!n?.title) continue;
+        const exists = mode === 'merge' && getNoteById(n.id);
+        if (exists) continue;
+        createNote({
+          id: n.id || uuidv4(),
+          title: String(n.title),
+          content: n.content ?? null,
+          color: n.color ?? null,
+          pinned: n.pinned ? 1 : 0,
+          created_at: n.created_at || new Date().toISOString(),
+          updated_at: n.updated_at || new Date().toISOString(),
+        });
+        stats.notes++;
+      }
+    }
+
+    res.json({ success: true, mode, stats, message: `导入完成：待办 ${stats.todos}、进行中 ${stats.ongoing}、倒计时 ${stats.countdowns}、链接 ${stats.links}、番茄钟 ${stats.focus}、笔记 ${stats.notes}` });
   } catch (error: any) {
     res.status(500).json({ error: error?.message || '导入失败' });
   }

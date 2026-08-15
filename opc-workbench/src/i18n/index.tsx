@@ -67,6 +67,15 @@ const zhCN: TranslationDict = {
   'backup.export': '导出数据',
   'backup.import': '导入数据',
   'backup.hint': '备份全部业务数据（待办/进行中/倒计时/链接/番茄钟），导入默认合并',
+  // 快捷笔记
+  'note.titlePlaceholder': '笔记标题',
+  'note.contentPlaceholder': '笔记内容（点击内容可编辑）',
+  'note.empty': '暂无笔记',
+  'note.pin': '置顶',
+  'note.unpin': '取消置顶',
+  'note.editContent': '编辑笔记内容：',
+  'note.pinFailed': '置顶操作失败',
+  'note.saveFailed': '保存失败',
   // 聊天页
   'chat.needProvider': '聊天功能需要配置 LLM Provider',
   'chat.workbenchUnaffected': '工作台功能不受影响，可正常使用',
@@ -276,6 +285,15 @@ const enUS: TranslationDict = {
   'backup.export': 'Export Data',
   'backup.import': 'Import Data',
   'backup.hint': 'Backs up all business data (todos/ongoing/countdowns/links/focus); import merges by default',
+  // Notes
+  'note.titlePlaceholder': 'Note title',
+  'note.contentPlaceholder': 'Note content (click to edit)',
+  'note.empty': 'No notes',
+  'note.pin': 'Pin',
+  'note.unpin': 'Unpin',
+  'note.editContent': 'Edit note content:',
+  'note.pinFailed': 'Failed to pin',
+  'note.saveFailed': 'Save failed',
   // Chat
   'chat.needProvider': 'Chat requires an LLM Provider to be configured',
   'chat.workbenchUnaffected': 'Workbench features are unaffected',

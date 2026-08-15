@@ -33,6 +33,7 @@ import NewsModule from './NewsModule';
 import CountdownModule from './CountdownModule';
 import LinksModule from './LinksModule';
 import FocusModule from './FocusModule';
+import NoteModule from './NoteModule';
 
 export const moduleRegistry: ModuleData[] = [
   {
@@ -76,5 +77,12 @@ export const moduleRegistry: ModuleData[] = [
     icon: 'Timer',
     colSpan: 1,
     component: FocusModule,
+  },
+  {
+    id: 'notes',
+    title: '快捷笔记',
+    icon: 'StickyNote',
+    colSpan: 1,
+    component: NoteModule,
   },
 ];

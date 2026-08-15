@@ -77,6 +77,15 @@ export const api = {
   createFocus: (data: { duration_min: number; task?: string }) =>
     request<{ session: any }>('/focus', { method: 'POST', body: JSON.stringify(data) }),
 
+  // Notes
+  getNotes: () => request<{ notes: any[] }>('/notes'),
+  createNote: (data: { title: string; content?: string; color?: string }) =>
+    request<{ note: any }>('/notes', { method: 'POST', body: JSON.stringify(data) }),
+  updateNote: (id: string, patch: Partial<{ title: string; content: string; color: string; pinned: number }>) =>
+    request<{ success: boolean }>(`/notes/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  deleteNote: (id: string) =>
+    request<{ success: boolean }>(`/notes/${id}`, { method: 'DELETE' }),
+
   // News
   getNews: (params?: { category?: string; since?: number }) => {
     const qs = new URLSearchParams();
