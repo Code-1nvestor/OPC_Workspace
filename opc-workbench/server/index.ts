@@ -3,6 +3,7 @@ import rateLimit from "express-rate-limit";
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
 import { fileURLToPath } from "url";
+import { errMsg } from "./err.js";
 import * as db from "./db.js";
 import todosRouter from "./routes/todos.js";
 import ongoingRouter from "./routes/ongoing.js";
@@ -66,8 +67,8 @@ app.get("/api/providers", async (_req, res) => {
   try {
     const providers = await getAvailableProviders();
     res.json({ providers, current: process.env.LLM_PROVIDER || 'codebuddy' });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || "获取 Provider 列表失败" });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, "获取 Provider 列表失败") });
   }
 });
 
@@ -82,9 +83,9 @@ app.post("/api/providers/switch", (req, res) => {
   // 2. 持久化到 .env 文件（重启后生效）
   try {
     updateEnvFile({ LLM_PROVIDER: provider });
-  } catch (err: any) {
+  } catch (err) {
     // .env 写入失败不影响热切换，但需告知用户
-    console.warn('[env-manager] 写入 .env 失败:', err?.message);
+    console.warn('[env-manager] 写入 .env 失败:', errMsg(err, '未知错误'));
   }
   // 3. 重置 Provider 缓存（热重载：下次 getProvider() 会创建新 Provider 实例）
   resetProviderCache();
@@ -104,8 +105,8 @@ app.post("/api/restart-server", async (_req, res) => {
   try {
     const port = await restartServer();
     res.json({ success: true, port, message: 'Server 已重启' });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '重启失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '重启失败') });
   }
 });
 
@@ -138,8 +139,8 @@ app.get("/api/settings/export", (_req, res) => {
       },
     };
     res.json(exportData);
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '导出失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '导出失败') });
   }
 });
 
@@ -178,8 +179,8 @@ app.post("/api/settings/import", (req, res) => {
     try {
       updateEnvFile(envUpdates);
       persisted = true;
-    } catch (err: any) {
-      console.warn('[env-manager] 写入 .env 失败:', err?.message);
+    } catch (err) {
+      console.warn('[env-manager] 写入 .env 失败:', errMsg(err, '未知错误'));
     }
 
     resetProviderCache();
@@ -190,8 +191,8 @@ app.post("/api/settings/import", (req, res) => {
       persisted,
       note: 'API Key 不会导入，需在目标机器上单独配置',
     });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '导入失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '导入失败') });
   }
 });
 
@@ -207,13 +208,13 @@ app.get("/api/check-login", async (_req, res) => {
       providerId: provider.id,
       providerName: provider.name,
     });
-  } catch (error: any) {
+  } catch (error) {
     res.json({
       isLoggedIn: false,
       method: 'none',
       providerId: provider.id,
       providerName: provider.name,
-      error: error?.message,
+      error: errMsg(error, '处理请求时发生错误'),
     });
   }
 });
@@ -252,8 +253,8 @@ app.post("/api/save-env-config", (req, res) => {
   try {
     updateEnvFile(envUpdates);
     persisted = true;
-  } catch (err: any) {
-    console.warn('[env-manager] 写入 .env 失败:', err?.message);
+  } catch (err) {
+    console.warn('[env-manager] 写入 .env 失败:', errMsg(err, '未知错误'));
   }
 
   // 重置缓存，热重载
@@ -275,11 +276,11 @@ app.get("/api/models", async (_req, res) => {
     const models = await provider.getModels();
     const defaultModel = models[0]?.modelId || 'default';
     res.json({ models, defaultModel, providerId: provider.id, providerName: provider.name });
-  } catch (error: any) {
+  } catch (error) {
     res.json({
       models: [{ modelId: "default", name: "默认模型" }],
       defaultModel: "default",
-      error: error?.message || String(error),
+      error: errMsg(error, String(error)),
     });
   }
 });
@@ -291,8 +292,8 @@ app.get("/api/sessions", (_req, res) => {
     const sessions = db.getAllSessions();
     const sessionsWithMessages = sessions.map(session => ({ ...session, messageCount: db.getMessagesBySession(session.id).length }));
     res.json({ sessions: sessionsWithMessages });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || "获取会话失败" });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, "获取会话失败") });
   }
 });
 
@@ -303,8 +304,8 @@ app.get("/api/sessions/:sessionId", (req, res) => {
     const messages = db.getMessagesBySession(req.params.sessionId);
     const parsedMessages = messages.map(msg => ({ ...msg, tool_calls: msg.tool_calls ? JSON.parse(msg.tool_calls) : null }));
     res.json({ session, messages: parsedMessages });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || "获取会话失败" });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, "获取会话失败") });
   }
 });
 
@@ -314,8 +315,8 @@ app.post("/api/sessions", (req, res) => {
     const now = new Date().toISOString();
     const session = db.createSession({ id: uuidv4(), title, model, sdk_session_id: null, created_at: now, updated_at: now });
     res.json({ session });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || "创建会话失败" });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, "创建会话失败") });
   }
 });
 
@@ -324,8 +325,8 @@ app.patch("/api/sessions/:sessionId", (req, res) => {
     const success = db.updateSession(req.params.sessionId, req.body);
     if (!success) return res.status(404).json({ error: "会话不存在" });
     res.json({ success: true });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || "更新会话失败" });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, "更新会话失败") });
   }
 });
 
@@ -334,8 +335,8 @@ app.delete("/api/sessions/:sessionId", (req, res) => {
     const success = db.deleteSession(req.params.sessionId);
     if (!success) return res.status(404).json({ error: "会话不存在" });
     res.json({ success: true });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || "删除会话失败" });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, "删除会话失败") });
   }
 });
 
@@ -380,8 +381,8 @@ app.post("/api/chat", async (req, res) => {
 
   try {
     db.createMessage({ id: userMessageId, session_id: session.id, role: 'user', content: message, model: null, created_at: now, tool_calls: null });
-  } catch (dbError: any) {
-    return res.status(500).json({ error: "保存消息失败", detail: dbError?.message });
+  } catch (dbError) {
+    return res.status(500).json({ error: "保存消息失败", detail: errMsg(dbError, '未知错误') });
   }
 
   res.setHeader("Content-Type", "text/event-stream");
@@ -501,8 +502,8 @@ app.post("/api/chat", async (req, res) => {
     }
 
     res.end();
-  } catch (error: any) {
-    const errorMessage = error?.message || "处理请求时发生错误";
+  } catch (error) {
+    const errorMessage = errMsg(error, "处理请求时发生错误");
     res.write(`data: ${JSON.stringify({ type: "error", message: errorMessage })}\n\n`);
     res.end();
   }
@@ -547,6 +548,7 @@ export function startServer(port?: number) {
     const addr = server.address();
     const actualPort = typeof addr === 'object' && addr ? addr.port : listenPort;
     const providerName = getProvider().name;
+    // eslint-disable-next-line no-console
     console.log(`\n  API server started at http://localhost:${actualPort}\n  Database: SQLite (${process.env.OPC_DB_PATH || 'data/opc.db'})\n  LLM Provider: ${providerName}\n`);
   });
   activeServer = server;
@@ -566,9 +568,9 @@ export async function restartServer(): Promise<number> {
 
   // 关闭旧 server
   await new Promise<void>((resolve) => {
-    const anyServer = activeServer as any;
-    if (typeof anyServer.closeAllConnections === 'function') {
-      anyServer.closeAllConnections();
+    const srv = activeServer as unknown as { closeAllConnections?: () => void };
+    if (typeof srv.closeAllConnections === 'function') {
+      srv.closeAllConnections();
     }
     activeServer!.close(() => resolve());
   });
@@ -577,6 +579,7 @@ export async function restartServer(): Promise<number> {
   // 重新启动
   const newServer = app.listen(oldPort, () => {
     const providerName = getProvider().name;
+    // eslint-disable-next-line no-console
     console.log(`\n  API server restarted at http://localhost:${oldPort}\n  LLM Provider: ${providerName}\n`);
   });
   activeServer = newServer;

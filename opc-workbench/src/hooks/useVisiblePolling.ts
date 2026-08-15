@@ -31,8 +31,8 @@ export function useVisiblePolling<T>(
     try {
       const result = await fetcherRef.current();
       setData(result);
-    } catch (e: any) {
-      setError(e?.message || '获取数据失败');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '获取数据失败');
     } finally {
       setLoading(false);
     }

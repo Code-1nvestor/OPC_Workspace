@@ -9,6 +9,17 @@ import { Pin, PinOff, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useI18n } from '../i18n';
 
+interface NoteItem {
+  id: string;
+  title: string;
+  content: string | null;
+  color: string | null;
+  pinned: number;
+  created_at: string;
+  updated_at: string;
+}
+
+
 const NOTE_COLORS = ['#0052d9', '#2ba471', '#ed7b2f', '#e34d59', '#8a6be5', '#64748b'];
 
 export default function NoteModule({ onRefresh: _onRefresh }: { onRefresh?: () => void }) {
@@ -46,7 +57,7 @@ export default function NoteModule({ onRefresh: _onRefresh }: { onRefresh?: () =
     }
   };
 
-  const handleTogglePin = async (note: any) => {
+  const handleTogglePin = async (note: NoteItem) => {
     try {
       await api.updateNote(note.id, { pinned: note.pinned ? 0 : 1 });
       setData(prev => ({
@@ -58,7 +69,7 @@ export default function NoteModule({ onRefresh: _onRefresh }: { onRefresh?: () =
     }
   };
 
-  const handleSaveContent = async (note: any, content: string) => {
+  const handleSaveContent = async (note: NoteItem, content: string) => {
     try {
       await api.updateNote(note.id, { content });
       setData(prev => ({ ...prev!, notes: prev!.notes.map(n => n.id === note.id ? { ...n, content } : n) }));
@@ -133,7 +144,7 @@ export default function NoteModule({ onRefresh: _onRefresh }: { onRefresh?: () =
                 className="text-xs whitespace-pre-wrap break-words cursor-pointer"
                 style={{ color: 'var(--td-text-color-secondary)' }}
                 onClick={() => {
-                  const next = window.prompt(t('note.editContent'), note.content);
+                  const next = window.prompt(t('note.editContent'), note.content ?? undefined);
                   if (next !== null && next !== note.content) handleSaveContent(note, next);
                 }}
               >

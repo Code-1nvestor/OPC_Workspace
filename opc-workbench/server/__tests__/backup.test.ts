@@ -83,7 +83,7 @@ describe('Backup: POST /api/backup/import', () => {
 
     const exported = await request(app).get('/api/backup/export');
     // 旧数据被清掉，只剩备份里的 t1
-    expect(exported.body.todos.map((t: any) => t.id)).toEqual(['t1']);
+    expect(exported.body.todos.map((t: Record<string, unknown>) => t.id)).toEqual(['t1']);
   });
 
   it('replace 模式保留聊天会话数据', async () => {

@@ -5,7 +5,7 @@
 
 const BASE_URL = '/api';
 
-async function request<T = any>(
+async function request<T = unknown>(
   endpoint: string,
   options?: RequestInit
 ): Promise<T> {
@@ -36,6 +36,58 @@ export interface Todo {
   updated_at: string;
 }
 
+export interface OngoingItem {
+  id: string;
+  title: string;
+  description: string | null;
+  progress: number;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CountdownItem {
+  id: string;
+  title: string;
+  target_date: string;
+  color: string | null;
+  created_at: string;
+}
+
+export interface LinkItem {
+  id: string;
+  title: string;
+  url: string;
+  icon: string | null;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface FocusSessionItem {
+  id: string;
+  duration_min: number;
+  completed_at: string;
+}
+
+
+export interface NewsItem {
+  id: string;
+  title: string;
+  summary: string;
+  sourceUrl: string;
+  publishedAt: string;
+  category: string;
+}
+export interface NoteItem {
+  id: string;
+  title: string;
+  content: string | null;
+  color: string | null;
+  pinned: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export const api = {
   // Health
   health: () => request<{ status: string }>('/health'),
@@ -50,37 +102,37 @@ export const api = {
     request<{ success: boolean }>(`/todos/${id}`, { method: 'DELETE' }),
 
   // Ongoing items
-  getOngoing: () => request<{ items: any[] }>('/ongoing'),
+  getOngoing: () => request<{ items: OngoingItem[] }>('/ongoing'),
   createOngoing: (data: { title: string; description?: string; progress?: number }) =>
-    request<{ item: any }>('/ongoing', { method: 'POST', body: JSON.stringify(data) }),
+    request<{ item: OngoingItem }>('/ongoing', { method: 'POST', body: JSON.stringify(data) }),
   updateOngoing: (id: string, patch: { title?: string; description?: string; progress?: number }) =>
-    request<{ item: any }>(`/ongoing/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+    request<{ item: OngoingItem }>(`/ongoing/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
   deleteOngoing: (id: string) =>
     request<{ success: boolean }>(`/ongoing/${id}`, { method: 'DELETE' }),
 
   // Countdowns
-  getCountdowns: () => request<{ countdowns: any[] }>('/countdowns'),
+  getCountdowns: () => request<{ countdowns: CountdownItem[] }>('/countdowns'),
   createCountdown: (data: { title: string; target_date: string; color?: string }) =>
-    request<{ countdown: any }>('/countdowns', { method: 'POST', body: JSON.stringify(data) }),
+    request<{ countdown: CountdownItem }>('/countdowns', { method: 'POST', body: JSON.stringify(data) }),
   deleteCountdown: (id: string) =>
     request<{ success: boolean }>(`/countdowns/${id}`, { method: 'DELETE' }),
 
   // Links
-  getLinks: () => request<{ links: any[] }>('/links'),
+  getLinks: () => request<{ links: LinkItem[] }>('/links'),
   createLink: (data: { title: string; url: string; icon?: string }) =>
-    request<{ link: any }>('/links', { method: 'POST', body: JSON.stringify(data) }),
+    request<{ link: LinkItem }>('/links', { method: 'POST', body: JSON.stringify(data) }),
   deleteLink: (id: string) =>
     request<{ success: boolean }>(`/links/${id}`, { method: 'DELETE' }),
 
   // Focus sessions
-  getFocus: () => request<{ sessions: any[]; todayCount: number; totalMinutes: number }>('/focus'),
+  getFocus: () => request<{ sessions: FocusSessionItem[]; todayCount: number; totalMinutes: number }>('/focus'),
   createFocus: (data: { duration_min: number; task?: string }) =>
-    request<{ session: any }>('/focus', { method: 'POST', body: JSON.stringify(data) }),
+    request<{ session: FocusSessionItem }>('/focus', { method: 'POST', body: JSON.stringify(data) }),
 
   // Notes
-  getNotes: () => request<{ notes: any[] }>('/notes'),
+  getNotes: () => request<{ notes: NoteItem[] }>('/notes'),
   createNote: (data: { title: string; content?: string; color?: string }) =>
-    request<{ note: any }>('/notes', { method: 'POST', body: JSON.stringify(data) }),
+    request<{ note: NoteItem }>('/notes', { method: 'POST', body: JSON.stringify(data) }),
   updateNote: (id: string, patch: Partial<{ title: string; content: string; color: string; pinned: number }>) =>
     request<{ success: boolean }>(`/notes/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
   deleteNote: (id: string) =>
@@ -92,7 +144,7 @@ export const api = {
     if (params?.category) qs.set('category', params.category);
     if (params?.since) qs.set('since', String(params.since));
     const q = qs.toString();
-    return request<{ items: any[]; cached: boolean; source: string }>(`/news${q ? '?' + q : ''}`);
+    return request<{ items: NewsItem[]; cached: boolean; source: string }>(`/news${q ? '?' + q : ''}`);
   },
 
   // Chat login check
@@ -149,11 +201,11 @@ export const api = {
       version: number;
       exportedAt: string;
       app: string;
-      todos: any[];
-      ongoing: any[];
-      countdowns: any[];
-      links: any[];
-      focus: any[];
+      todos: Todo[];
+      ongoing: OngoingItem[];
+      countdowns: CountdownItem[];
+      links: LinkItem[];
+      focus: FocusSessionItem[];
     }>('/backup/export'),
 
   importBackup: (backup: Record<string, unknown>, mode: 'merge' | 'replace') =>

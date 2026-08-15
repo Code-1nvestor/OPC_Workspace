@@ -1,3 +1,4 @@
+import { errMsg } from '../err.js';
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import * as db from '../db.js';
@@ -8,8 +9,8 @@ const router = Router();
 router.get('/', (_req, res) => {
   try {
     res.json({ items: db.getAllOngoing() });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '获取进行中事项失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '获取进行中事项失败') });
   }
 });
 
@@ -29,8 +30,8 @@ router.post('/', (req, res) => {
       updated_at: now,
     });
     res.json({ item });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '创建进行中事项失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '创建进行中事项失败') });
   }
 });
 
@@ -40,8 +41,8 @@ router.patch('/:id', (req, res) => {
     const success = db.updateOngoing(req.params.id, req.body);
     if (!success) return res.status(404).json({ error: '事项不存在' });
     res.json({ success: true });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '更新进行中事项失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '更新进行中事项失败') });
   }
 });
 
@@ -51,8 +52,8 @@ router.delete('/:id', (req, res) => {
     const success = db.deleteOngoing(req.params.id);
     if (!success) return res.status(404).json({ error: '事项不存在' });
     res.json({ success: true });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '删除进行中事项失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '删除进行中事项失败') });
   }
 });
 

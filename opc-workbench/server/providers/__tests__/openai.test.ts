@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { OpenAIProvider } from '../openai';
+import type { ChatEvent } from '../types';
 
 /** 构造一个带 SSE 文本流的 Response（mock fetch 返回值） */
 function makeStreamResponse(chunks: string[]): Response {
@@ -31,20 +32,20 @@ describe('OpenAIProvider (Agnes)', () => {
   it('未配置 API Key 时返回 error 事件', async () => {
     vi.stubEnv('OPENAI_API_KEY', '');
     const provider = new OpenAIProvider();
-    const events: any[] = [];
+    const events: ChatEvent[] = [];
     for await (const ev of provider.streamChat({ message: 'hi' })) events.push(ev);
     expect(events[0].type).toBe('error');
-    expect(events[0].message).toContain('OPENAI_API_KEY');
+    expect((events[0] as { message: string }).message).toContain('OPENAI_API_KEY');
   });
 
   it('从 SSE 流式解析并依次 emit init / text / done', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(makeStreamResponse(SAMPLE_SSE)));
     const provider = new OpenAIProvider();
-    const events: any[] = [];
+    const events: ChatEvent[] = [];
     for await (const ev of provider.streamChat({ message: 'hi' })) events.push(ev);
 
     expect(events[0].type).toBe('init');
-    expect(events[0].model).toBe('agnes-2.0-flash');
+    expect((events[0] as { model: string }).model).toBe('agnes-2.0-flash');
 
     const text = events.filter((e) => e.type === 'text').map((e) => e.content).join('');
     expect(text).toBe('Hello world');
@@ -58,9 +59,9 @@ describe('OpenAIProvider (Agnes)', () => {
       vi.fn().mockResolvedValue(new Response('bad', { status: 401, statusText: 'Unauthorized' }))
     );
     const provider = new OpenAIProvider();
-    const events: any[] = [];
+    const events: ChatEvent[] = [];
     for await (const ev of provider.streamChat({ message: 'hi' })) events.push(ev);
-    expect(events.some((e) => e.type === 'error' && /401/.test(e.message))).toBe(true);
+    expect(events.some((e) => e.type === 'error' && /401/.test((e as { message: string }).message))).toBe(true);
   });
 
   it('getModels 返回环境变量中的模型', async () => {

@@ -43,7 +43,7 @@ describe('Routes: /api/notes', () => {
     expect(res.body.success).toBe(true);
 
     const list = await request(app).get('/api/notes');
-    const updated = list.body.notes.find((n: any) => n.id === id);
+    const updated = list.body.notes.find((n: Record<string, unknown>) => n.id === id);
     expect(updated.pinned).toBe(1);
   });
 
@@ -61,6 +61,6 @@ describe('Routes: /api/notes', () => {
     expect(res.body.success).toBe(true);
 
     const list = await request(app).get('/api/notes');
-    expect(list.body.notes.find((n: any) => n.id === id)).toBeUndefined();
+    expect(list.body.notes.find((n: Record<string, unknown>) => n.id === id)).toBeUndefined();
   });
 });

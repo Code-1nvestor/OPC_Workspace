@@ -11,6 +11,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import type { ChatProvider, ChatEvent, ChatParams, ProviderModel } from './types';
+import { errMsg } from '../err.js';
 
 // ============= 内置工具定义 =============
 
@@ -280,11 +281,12 @@ export class OpenAIProvider implements ChatProvider {
           }
         }
       }
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      if (err.name === 'AbortError') {
         return { fullText: '', toolCalls: [], error: '请求超时（2 分钟）' };
       }
-      return { fullText: '', toolCalls: [], error: error?.message || '请求失败' };
+      return { fullText: '', toolCalls: [], error: err.message || '请求失败' };
     }
 
     return {
@@ -327,8 +329,8 @@ export class OpenAIProvider implements ChatProvider {
         default:
           return JSON.stringify({ error: `未知工具: ${name}` });
       }
-    } catch (error: any) {
-      return JSON.stringify({ error: error?.message || '工具执行失败' });
+    } catch (error) {
+      return JSON.stringify({ error: errMsg(error, '工具执行失败') });
     }
   }
 }

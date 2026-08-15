@@ -69,7 +69,7 @@ export default function NewsModule({ onRefresh: _onRefresh }: { onRefresh?: () =
         {items.slice(0, 20).map((item, idx) => (
           <a
             key={item.id || idx}
-            href={item.sourceUrl || item.url || '#'}
+            href={item.sourceUrl || '#'}
             target="_blank"
             rel="noopener noreferrer"
             className="block p-3 rounded-lg transition-colors hover:bg-[var(--td-bg-color-component-hover)]"

@@ -160,7 +160,7 @@ export function ToolCallsCollapse({ toolCalls, isStreaming = false }: ToolCallsC
   
   // 汇总工具类型（去重）
   const toolSummary = useMemo(() => {
-    const typeMap = new Map<string, { icon: any; color: string; count: number }>();
+    const typeMap = new Map<string, { icon: React.ComponentType<{ size?: number | string; color?: string; style?: React.CSSProperties }>; color: string; count: number }>();
     toolCalls.forEach(tool => {
       const type = getToolType(tool.name);
       const { icon, color } = getToolIcon(tool.name);
@@ -577,7 +577,7 @@ export function ToolCallsCollapse({ toolCalls, isStreaming = false }: ToolCallsC
 
     if (isAgnesBuiltin) {
       // 尝试解析结果为 JSON
-      let parsedResult: any = null;
+      let parsedResult: unknown = null;
       if (tool.result) {
         try { parsedResult = JSON.parse(tool.result); } catch { /* 非 JSON */ }
       }
@@ -630,7 +630,7 @@ export function ToolCallsCollapse({ toolCalls, isStreaming = false }: ToolCallsC
           </div>
 
           {/* 展开显示结果 */}
-          {toolExpanded && tool.result && parsedResult && Array.isArray(parsedResult) && (
+          {toolExpanded && tool.result && typeof parsedResult === 'object' && parsedResult !== null && Array.isArray(parsedResult) && (
             <div
               className="px-3 py-2 text-xs border-t max-h-48 overflow-y-auto"
               style={{
@@ -638,17 +638,19 @@ export function ToolCallsCollapse({ toolCalls, isStreaming = false }: ToolCallsC
                 backgroundColor: 'var(--td-bg-color-container)',
               }}
             >
-              {parsedResult.length === 0 ? (
+              {(parsedResult as unknown[]).length === 0 ? (
                 <span style={{ color: 'var(--td-text-color-placeholder)' }}>（空列表）</span>
               ) : (
                 <div className="space-y-1">
-                  {parsedResult.slice(0, 20).map((item: any, i: number) => (
+                  {(parsedResult as unknown[]).slice(0, 20).map((item: unknown, i: number) => (
                     <div key={i} className="flex items-start gap-2" style={{ color: 'var(--td-text-color-secondary)' }}>
                       <span style={{ color: 'var(--td-text-color-placeholder)', minWidth: 20 }}>{i + 1}.</span>
                       <span className="flex-1 break-all">
-                        {typeof item === 'string' ? item : item?.title || item?.name || JSON.stringify(item).slice(0, 100)}
-                        {item?.done === 1 && <span style={{ color: 'var(--td-success-color)' }}> ✓</span>}
-                        {item?.progress != null && <span style={{ color: 'var(--td-text-color-placeholder)' }}> ({item.progress}%)</span>}
+                        {typeof item === 'string'
+                          ? item
+                          : String((item as Record<string, unknown>)?.title || (item as Record<string, unknown>)?.name || JSON.stringify(item).slice(0, 100))}
+                        {(item as Record<string, unknown>)?.done === 1 && <span style={{ color: 'var(--td-success-color)' }}> ✓</span>}
+                        {(item as Record<string, unknown>)?.progress != null && <span style={{ color: 'var(--td-text-color-placeholder)' }}> ({String((item as Record<string, unknown>).progress)}%)</span>}
                       </span>
                     </div>
                   ))}

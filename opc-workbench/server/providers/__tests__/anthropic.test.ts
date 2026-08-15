@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AnthropicProvider } from '../anthropic';
+import type { ChatEvent } from '../types';
 
 /** 构造一个带 SSE 文本流的 Response（mock fetch 返回值） */
 function makeStreamResponse(chunks: string[]): Response {
@@ -31,7 +32,7 @@ describe('AnthropicProvider (火山 GLM)', () => {
   it('未配置 API Key 时返回 error 事件', async () => {
     vi.stubEnv('ANTHROPIC_API_KEY', '');
     const provider = new AnthropicProvider();
-    const events: any[] = [];
+    const events: ChatEvent[] = [];
     for await (const ev of provider.streamChat({ message: 'hi' })) events.push(ev);
     expect(events[0].type).toBe('error');
   });
@@ -39,7 +40,7 @@ describe('AnthropicProvider (火山 GLM)', () => {
   it('解析 content_block_delta 流并 emit text / done', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(makeStreamResponse(SAMPLE_SSE)));
     const provider = new AnthropicProvider();
-    const events: any[] = [];
+    const events: ChatEvent[] = [];
     for await (const ev of provider.streamChat({ message: 'hi' })) events.push(ev);
 
     expect(events[0].type).toBe('init');
@@ -58,6 +59,6 @@ describe('AnthropicProvider (火山 GLM)', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, opts] = fetchMock.mock.calls[0];
     expect(url).toContain('/messages');
-    expect((opts as any).headers['x-api-key']).toBe('test-key');
+    expect((opts as { headers: Record<string, string> }).headers['x-api-key']).toBe('test-key');
   });
 });

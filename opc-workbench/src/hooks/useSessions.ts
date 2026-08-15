@@ -25,11 +25,11 @@ export function useSessions() {
       const res = await fetch('/api/sessions');
       const data = await res.json();
       if (data.sessions) {
-        const loadedSessions: Session[] = data.sessions.map((s: any) => ({
+        const loadedSessions: Session[] = data.sessions.map((s: Record<string, unknown>) => ({
           id: s.id,
           title: s.title,
           model: s.model,
-          createdAt: new Date(s.created_at),
+          createdAt: new Date(s.created_at as string),
           messages: []
         }));
         setSessions(loadedSessions);
@@ -44,12 +44,12 @@ export function useSessions() {
       const res = await fetch(`/api/sessions/${sessionId}`);
       const data = await res.json();
       if (data.messages) {
-        const messages: Message[] = data.messages.map((m: any) => ({
+        const messages: Message[] = data.messages.map((m: Record<string, unknown>) => ({
           id: m.id,
           role: m.role,
           content: m.content,
           model: m.model,
-          timestamp: new Date(m.created_at),
+          timestamp: new Date(m.created_at as string),
           toolCalls: m.tool_calls || undefined
         }));
         setSessions(prev => prev.map(s =>

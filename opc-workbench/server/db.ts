@@ -67,6 +67,7 @@ try {
   const hasColumn = tableInfo.some(col => col.name === 'sdk_session_id');
   if (!hasColumn) {
     db.exec("ALTER TABLE sessions ADD COLUMN sdk_session_id TEXT");
+    // eslint-disable-next-line no-console
     console.log("[DB] Added sdk_session_id column to sessions table");
   }
 } catch {
@@ -120,7 +121,7 @@ export function createSession(session: DbSession): DbSession {
 // 更新会话
 export function updateSession(id: string, updates: Partial<Pick<DbSession, 'title' | 'model' | 'sdk_session_id'>>): boolean {
   const fields: string[] = [];
-  const values: any[] = [];
+  const values: unknown[] = [];
 
   if (updates.title !== undefined) {
     fields.push('title = ?');
@@ -187,7 +188,7 @@ export function createMessage(message: DbMessage): DbMessage {
 // 更新消息内容
 export function updateMessage(id: string, updates: Partial<Pick<DbMessage, 'content' | 'tool_calls'>>): boolean {
   const fields: string[] = [];
-  const values: any[] = [];
+  const values: unknown[] = [];
 
   if (updates.content !== undefined) {
     fields.push('content = ?');
@@ -328,7 +329,7 @@ export function createTodo(todo: Todo): Todo {
 
 export function updateTodo(id: string, updates: Partial<Pick<Todo, 'title' | 'note' | 'done'>>): boolean {
   const fields: string[] = [];
-  const values: any[] = [];
+  const values: unknown[] = [];
   if (updates.title !== undefined) { fields.push('title = ?'); values.push(updates.title); }
   if (updates.note !== undefined) { fields.push('note = ?'); values.push(updates.note); }
   if (updates.done !== undefined) { fields.push('done = ?'); values.push(updates.done); }
@@ -366,7 +367,7 @@ export function createOngoing(item: OngoingItem): OngoingItem {
 
 export function updateOngoing(id: string, updates: Partial<Pick<OngoingItem, 'title' | 'description' | 'progress' | 'status'>>): boolean {
   const fields: string[] = [];
-  const values: any[] = [];
+  const values: unknown[] = [];
   if (updates.title !== undefined) { fields.push('title = ?'); values.push(updates.title); }
   if (updates.description !== undefined) { fields.push('description = ?'); values.push(updates.description); }
   if (updates.progress !== undefined) {
@@ -406,7 +407,7 @@ export function createCountdown(item: Countdown): Countdown {
 
 export function updateCountdown(id: string, updates: Partial<Pick<Countdown, 'title' | 'target_date' | 'color'>>): boolean {
   const fields: string[] = [];
-  const values: any[] = [];
+  const values: unknown[] = [];
   if (updates.title !== undefined) { fields.push('title = ?'); values.push(updates.title); }
   if (updates.target_date !== undefined) { fields.push('target_date = ?'); values.push(updates.target_date); }
   if (updates.color !== undefined) { fields.push('color = ?'); values.push(updates.color); }
@@ -442,7 +443,7 @@ export function createLink(item: Link): Link {
 
 export function updateLink(id: string, updates: Partial<Pick<Link, 'title' | 'url' | 'icon' | 'sort_order'>>): boolean {
   const fields: string[] = [];
-  const values: any[] = [];
+  const values: unknown[] = [];
   if (updates.title !== undefined) { fields.push('title = ?'); values.push(updates.title); }
   if (updates.url !== undefined) { fields.push('url = ?'); values.push(updates.url); }
   if (updates.icon !== undefined) { fields.push('icon = ?'); values.push(updates.icon); }
@@ -560,7 +561,7 @@ export function createNote(note: Note): Note {
 
 export function updateNote(id: string, updates: Partial<Pick<Note, 'title' | 'content' | 'color' | 'pinned'>>): boolean {
   const fields: string[] = [];
-  const values: any[] = [];
+  const values: unknown[] = [];
   if (updates.title !== undefined) { fields.push('title = ?'); values.push(updates.title); }
   if (updates.content !== undefined) { fields.push('content = ?'); values.push(updates.content); }
   if (updates.color !== undefined) { fields.push('color = ?'); values.push(updates.color); }

@@ -1,3 +1,4 @@
+import { errMsg } from '../err.js';
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import * as db from '../db.js';
@@ -12,8 +13,8 @@ router.get('/', (_req, res) => {
     const total = sessions.length;
     const totalMinutes = sessions.reduce((sum, s) => sum + s.duration_min, 0);
     res.json({ sessions, todayCount, total, totalMinutes });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '获取番茄钟记录失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '获取番茄钟记录失败') });
   }
 });
 
@@ -27,8 +28,8 @@ router.post('/', (req, res) => {
       completed_at: new Date().toISOString(),
     });
     res.json({ session: item, todayCount: db.getTodayFocusCount() });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '记录番茄钟失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '记录番茄钟失败') });
   }
 });
 

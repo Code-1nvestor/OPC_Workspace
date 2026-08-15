@@ -126,11 +126,12 @@ export class AnthropicProvider implements ChatProvider {
       }
 
       yield { type: 'done' };
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      if (err.name === 'AbortError') {
         yield { type: 'error', message: '请求超时（2 分钟）' };
       } else {
-        yield { type: 'error', message: error?.message || '请求失败' };
+        yield { type: 'error', message: err.message || '请求失败' };
       }
     }
   }

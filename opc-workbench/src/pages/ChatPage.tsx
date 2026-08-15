@@ -65,7 +65,7 @@ export function ChatPage({
 
   useEffect(() => {
     api.checkLogin().then(res => {
-      setLoginStatus({ checked: true, isLoggedIn: res.isLoggedIn, error: res.error, providerId: (res as any).providerId, providerName: (res as any).providerName });
+      setLoginStatus({ checked: true, isLoggedIn: res.isLoggedIn, error: res.error, providerId: res.providerId, providerName: res.providerName });
     }).catch(() => {
       setLoginStatus({ checked: true, isLoggedIn: false, error: '无法连接服务器' });
     });
@@ -76,7 +76,7 @@ export function ChatPage({
     const handleProviderChanged = () => {
       setLoginStatus({ checked: false, isLoggedIn: false });
       api.checkLogin().then(res => {
-        setLoginStatus({ checked: true, isLoggedIn: res.isLoggedIn, error: res.error, providerId: (res as any).providerId, providerName: (res as any).providerName });
+        setLoginStatus({ checked: true, isLoggedIn: res.isLoggedIn, error: res.error, providerId: res.providerId, providerName: res.providerName });
       }).catch(() => {
         setLoginStatus({ checked: true, isLoggedIn: false, error: '无法连接服务器' });
       });

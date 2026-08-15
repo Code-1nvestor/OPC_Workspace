@@ -88,6 +88,10 @@ const PRESET_TEMPLATES = [
   },
 ];
 
+function errMsgLike(error: unknown, fallback: string): string {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
+
 export function SettingsPage({
   agents,
   onAdd,
@@ -141,12 +145,12 @@ export function SettingsPage({
       setLoginStatus({
         isLoggedIn: data.isLoggedIn,
         checking: false,
-        providerId: (data as any).providerId,
-        providerName: (data as any).providerName,
+        providerId: data.providerId,
+        providerName: data.providerName,
         error: data.error,
       });
-    } catch (error: any) {
-      setLoginStatus({ isLoggedIn: false, checking: false, error: error?.message || '检查登录状态失败' });
+    } catch (error) {
+      setLoginStatus({ isLoggedIn: false, checking: false, error: errMsgLike(error, '检查登录状态失败') });
     }
   }, []);
 
@@ -182,8 +186,8 @@ export function SettingsPage({
       await Promise.all([fetchProviders(), checkLoginStatus()]);
       // 通过自定义事件通知 ChatPage / Sidebar 刷新模型列表
       window.dispatchEvent(new CustomEvent('provider-changed', { detail: { providerId, providerName } }));
-    } catch (error: any) {
-      MessagePlugin.error(error?.message || '切换失败');
+    } catch (error) {
+      MessagePlugin.error(errMsgLike(error, '切换失败'));
     } finally {
       setSwitchingProvider(false);
     }
@@ -218,8 +222,8 @@ export function SettingsPage({
       } else {
         MessagePlugin.error(data.error || '保存失败');
       }
-    } catch (error: any) {
-      MessagePlugin.error(error?.message || '保存失败');
+    } catch (error) {
+      MessagePlugin.error(errMsgLike(error, '保存失败'));
     } finally {
       setSavingEnv(false);
     }
@@ -240,8 +244,8 @@ export function SettingsPage({
       a.click();
       URL.revokeObjectURL(url);
       MessagePlugin.success('设置已导出（不含 API Key）');
-    } catch (error: any) {
-      MessagePlugin.error(error?.message || '导出失败');
+    } catch (error) {
+      MessagePlugin.error(errMsgLike(error, '导出失败'));
     }
   };
 
@@ -254,8 +258,8 @@ export function SettingsPage({
       MessagePlugin.success(result.message);
       await Promise.all([checkLoginStatus(), fetchProviders()]);
       window.dispatchEvent(new CustomEvent('provider-changed'));
-    } catch (error: any) {
-      MessagePlugin.error(error?.message || '导入失败');
+    } catch (error) {
+      MessagePlugin.error(errMsgLike(error, '导入失败'));
     } finally {
       setImporting(false);
     }
@@ -276,8 +280,8 @@ export function SettingsPage({
       a.click();
       URL.revokeObjectURL(url);
       MessagePlugin.success('数据备份已导出');
-    } catch (error: any) {
-      MessagePlugin.error(error?.message || '导出失败');
+    } catch (error) {
+      MessagePlugin.error(errMsgLike(error, '导出失败'));
     }
   };
 
@@ -288,8 +292,8 @@ export function SettingsPage({
       const data = JSON.parse(text);
       const result = await api.importBackup(data, mode);
       MessagePlugin.success(result.message);
-    } catch (error: any) {
-      MessagePlugin.error(error?.message || '导入失败');
+    } catch (error) {
+      MessagePlugin.error(errMsgLike(error, '导入失败'));
     } finally {
       setBackupImporting(false);
     }
@@ -426,22 +430,22 @@ export function SettingsPage({
                 <div className="space-y-2">
                   <p className="text-xs font-medium" style={{ color: 'var(--td-text-color-secondary)' }}>CodeBuddy</p>
                   <div className="grid grid-cols-2 gap-2">
-                    <Input type="password" size="small" value={envConfig.apiKey} onChange={(v: any) => setEnvConfig(prev => ({ ...prev, apiKey: v }))} placeholder="CODEBUDDY_API_KEY" />
-                    <Input type="password" size="small" value={envConfig.authToken} onChange={(v: any) => setEnvConfig(prev => ({ ...prev, authToken: v }))} placeholder="CODEBUDDY_AUTH_TOKEN" />
+                    <Input type="password" size="small" value={envConfig.apiKey} onChange={(v: string) => setEnvConfig(prev => ({ ...prev, apiKey: v }))} placeholder="CODEBUDDY_API_KEY" />
+                    <Input type="password" size="small" value={envConfig.authToken} onChange={(v: string) => setEnvConfig(prev => ({ ...prev, authToken: v }))} placeholder="CODEBUDDY_AUTH_TOKEN" />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <p className="text-xs font-medium" style={{ color: 'var(--td-text-color-secondary)' }}>Anthropic / 火山 GLM-5.2</p>
                   <div className="grid grid-cols-2 gap-2">
-                    <Input type="password" size="small" value={envConfig.anthropicApiKey} onChange={(v: any) => setEnvConfig(prev => ({ ...prev, anthropicApiKey: v }))} placeholder="ANTHROPIC_API_KEY" />
-                    <Input size="small" value={envConfig.anthropicModel} onChange={(v: any) => setEnvConfig(prev => ({ ...prev, anthropicModel: v }))} placeholder="glm-5.2" />
+                    <Input type="password" size="small" value={envConfig.anthropicApiKey} onChange={(v: string) => setEnvConfig(prev => ({ ...prev, anthropicApiKey: v }))} placeholder="ANTHROPIC_API_KEY" />
+                    <Input size="small" value={envConfig.anthropicModel} onChange={(v: string) => setEnvConfig(prev => ({ ...prev, anthropicModel: v }))} placeholder="glm-5.2" />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <p className="text-xs font-medium" style={{ color: 'var(--td-text-color-secondary)' }}>OpenAI / Agnes</p>
                   <div className="grid grid-cols-2 gap-2">
-                    <Input type="password" size="small" value={envConfig.openaiApiKey} onChange={(v: any) => setEnvConfig(prev => ({ ...prev, openaiApiKey: v }))} placeholder="OPENAI_API_KEY" />
-                    <Input size="small" value={envConfig.openaiModel} onChange={(v: any) => setEnvConfig(prev => ({ ...prev, openaiModel: v }))} placeholder="agnes-2.0-flash" />
+                    <Input type="password" size="small" value={envConfig.openaiApiKey} onChange={(v: string) => setEnvConfig(prev => ({ ...prev, openaiApiKey: v }))} placeholder="OPENAI_API_KEY" />
+                    <Input size="small" value={envConfig.openaiModel} onChange={(v: string) => setEnvConfig(prev => ({ ...prev, openaiModel: v }))} placeholder="agnes-2.0-flash" />
                   </div>
                 </div>
                 <div className="flex items-center gap-2 pt-2">
@@ -508,7 +512,7 @@ export function SettingsPage({
           <div className="flex items-center gap-3">
             <Select
               value={locale}
-              onChange={(v: any) => setLocale(v as Locale)}
+              onChange={(v) => setLocale(v as unknown as Locale)}
               style={{ width: 200 }}
             >
               <Select.Option value="zh-CN" label="简体中文">
@@ -532,7 +536,7 @@ export function SettingsPage({
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <span className="text-sm" style={{ color: 'var(--td-text-color-secondary)' }}>{t('settings.currentVersion')}</span>
-              <Tag size="small" variant="outline">v{(window as any).opc?.version || '1.0.0'}</Tag>
+              <Tag size="small" variant="outline">v{(window as { opc?: { version?: string } }).opc?.version || '1.0.0'}</Tag>
               {updateStatus.status === 'available' && (
                 <Tag size="small" theme="warning">{t('settings.updateAvailable').replace('{v}', String(updateStatus.version))}</Tag>
               )}
@@ -583,10 +587,10 @@ export function SettingsPage({
 
                   <Form labelAlign="top">
                     <Form.FormItem label="名称" requiredMark>
-                      <Input value={formData.name} onChange={(v: any) => setFormData(prev => ({ ...prev, name: v }))} placeholder="例如：代码助手" />
+                      <Input value={formData.name} onChange={(v: string) => setFormData(prev => ({ ...prev, name: v }))} placeholder="例如：代码助手" />
                     </Form.FormItem>
                     <Form.FormItem label="描述">
-                      <Input value={formData.description} onChange={(v: any) => setFormData(prev => ({ ...prev, description: v }))} placeholder="简短描述" />
+                      <Input value={formData.description} onChange={(v: string) => setFormData(prev => ({ ...prev, description: v }))} placeholder="简短描述" />
                     </Form.FormItem>
                     <Form.FormItem label="图标和颜色">
                       <div className="flex gap-4">
@@ -607,7 +611,7 @@ export function SettingsPage({
                       </div>
                     </Form.FormItem>
                     <Form.FormItem label="权限模式">
-                      <Select value={formData.permissionMode} onChange={(v: any) => setFormData(prev => ({ ...prev, permissionMode: v as PermissionMode }))} style={{ width: '100%' }}>
+                      <Select value={formData.permissionMode} onChange={(v) => setFormData(prev => ({ ...prev, permissionMode: v as unknown as PermissionMode }))} style={{ width: '100%' }}>
                         {PERMISSION_MODES.map(mode => (
                           <Select.Option key={mode.value} value={mode.value} label={mode.label}>
                             <div className="flex flex-col py-1">
@@ -619,7 +623,7 @@ export function SettingsPage({
                       </Select>
                     </Form.FormItem>
                     <Form.FormItem label="系统提示词" requiredMark>
-                      <Textarea value={formData.systemPrompt} onChange={(v: any) => setFormData(prev => ({ ...prev, systemPrompt: v }))} placeholder="定义 Agent 的行为和能力..." autosize={{ minRows: 4, maxRows: 8 }} />
+                      <Textarea value={formData.systemPrompt} onChange={(v: string) => setFormData(prev => ({ ...prev, systemPrompt: v }))} placeholder="定义 Agent 的行为和能力..." autosize={{ minRows: 4, maxRows: 8 }} />
                     </Form.FormItem>
                   </Form>
 

@@ -1,3 +1,4 @@
+import { errMsg } from '../err.js';
 import { Router } from 'express';
 import * as db from '../db.js';
 
@@ -37,9 +38,10 @@ interface AIHOTItem {
 /**
  * 归一化 AIHOT 返回的数据为统一格式
  */
-function normalizeItems(raw: any[], fallbackCategory: string) {
+function normalizeItems(raw: unknown[], fallbackCategory: string) {
   if (!Array.isArray(raw)) return [];
-  return raw.map((item: AIHOTItem, idx: number) => {
+  return raw.map((rawItem: unknown, idx: number) => {
+    const item = rawItem as AIHOTItem;
     const sourceUrl =
       item.sourceUrl || item.url || item.link || item.source || '';
     return {
@@ -64,7 +66,7 @@ function normalizeItems(raw: any[], fallbackCategory: string) {
 /**
  * 从上游 AIHOT 获取资讯
  */
-async function fetchFromAIHOT(category: string, sinceHours: number): Promise<any[]> {
+async function fetchFromAIHOT(category: string, sinceHours: number): Promise<AIHOTItem[]> {
   const params = new URLSearchParams({
     mode: 'selected',
     take: '50',
@@ -101,7 +103,7 @@ async function fetchFromAIHOT(category: string, sinceHours: number): Promise<any
     const data = await resp.json();
 
     // AIHOT 返回格式兼容：{ data: [...] } 或 { items: [...] } 或 [...]
-    const items = data.data || data.items || data || [];
+    const items = (data.data || data.items || data || []) as unknown[];
     return normalizeItems(items, category);
   } finally {
     clearTimeout(timeout);
@@ -130,22 +132,23 @@ router.get('/', async (req, res) => {
       const payload = { items, count: items.length, category, sinceHours };
       db.setNewsCache(cacheKey, JSON.stringify(payload));
       return res.json({ ...payload, cached: false, stale: false });
-    } catch (fetchError: any) {
+    } catch (fetchError) {
       // 上游失败 -> 降级返回过期缓存
+      const fetchErrMsg = errMsg(fetchError, '未知错误');
       if (cached) {
         const payload = JSON.parse(cached.payload);
-        console.error('[News] upstream failed, serving stale cache:', fetchError?.message);
+        console.error('[News] upstream failed, serving stale cache:', fetchErrMsg);
         return res.json({ ...payload, cached: true, stale: true });
       }
       // 无缓存可用
-      console.error('[News] upstream failed, no cache available:', fetchError?.message);
+      console.error('[News] upstream failed, no cache available:', fetchErrMsg);
       return res.status(502).json({
         error: '获取资讯失败，请稍后重试',
-        detail: fetchError?.message,
+        detail: fetchErrMsg,
       });
     }
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '获取资讯失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '获取资讯失败') });
   }
 });
 

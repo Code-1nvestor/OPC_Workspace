@@ -1,3 +1,4 @@
+import { errMsg } from '../err.js';
 /**
  * 快捷笔记路由
  *
@@ -16,8 +17,8 @@ const router = Router();
 router.get('/', (_req, res) => {
   try {
     res.json({ notes: getAllNotes() });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '获取笔记失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '获取笔记失败') });
   }
 });
 
@@ -37,8 +38,8 @@ router.post('/', (req, res) => {
       updated_at: now,
     });
     res.json({ note });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '创建笔记失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '创建笔记失败') });
   }
 });
 
@@ -48,8 +49,8 @@ router.patch('/:id', (req, res) => {
     const success = updateNote(req.params.id, req.body);
     if (!success) return res.status(404).json({ error: '笔记不存在' });
     res.json({ success: true });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '更新笔记失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '更新笔记失败') });
   }
 });
 
@@ -59,8 +60,8 @@ router.delete('/:id', (req, res) => {
     const success = deleteNote(req.params.id);
     if (!success) return res.status(404).json({ error: '笔记不存在' });
     res.json({ success: true });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '删除笔记失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '删除笔记失败') });
   }
 });
 

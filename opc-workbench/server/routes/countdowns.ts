@@ -1,3 +1,4 @@
+import { errMsg } from '../err.js';
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import * as db from '../db.js';
@@ -8,8 +9,8 @@ const router = Router();
 router.get('/', (_req, res) => {
   try {
     res.json({ countdowns: db.getAllCountdowns() });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '获取倒计时失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '获取倒计时失败') });
   }
 });
 
@@ -27,8 +28,8 @@ router.post('/', (req, res) => {
       created_at: new Date().toISOString(),
     });
     res.json({ countdown: item });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '创建倒计时失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '创建倒计时失败') });
   }
 });
 
@@ -38,8 +39,8 @@ router.patch('/:id', (req, res) => {
     const success = db.updateCountdown(req.params.id, req.body);
     if (!success) return res.status(404).json({ error: '倒计时不存在' });
     res.json({ success: true });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '更新倒计时失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '更新倒计时失败') });
   }
 });
 
@@ -49,8 +50,8 @@ router.delete('/:id', (req, res) => {
     const success = db.deleteCountdown(req.params.id);
     if (!success) return res.status(404).json({ error: '倒计时不存在' });
     res.json({ success: true });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '删除倒计时失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '删除倒计时失败') });
   }
 });
 

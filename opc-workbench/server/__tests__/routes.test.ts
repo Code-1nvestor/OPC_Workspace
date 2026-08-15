@@ -51,7 +51,7 @@ describe('Routes: /api/todos', () => {
     expect(res.body.success).toBe(true);
 
     const list = await request(app).get('/api/todos');
-    const updated = list.body.todos.find((t: any) => t.id === id);
+    const updated = list.body.todos.find((t: Record<string, unknown>) => t.id === id);
     expect(updated.done).toBe(1);
   });
 
@@ -69,7 +69,7 @@ describe('Routes: /api/todos', () => {
     expect(res.body.success).toBe(true);
 
     const list = await request(app).get('/api/todos');
-    expect(list.body.todos.find((t: any) => t.id === id)).toBeUndefined();
+    expect(list.body.todos.find((t: Record<string, unknown>) => t.id === id)).toBeUndefined();
   });
 });
 

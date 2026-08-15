@@ -24,6 +24,16 @@ export default function FocusModule({ onRefresh: _onRefresh }: { onRefresh?: () 
     { interval: 60000 }
   );
 
+  const handleComplete = useCallback(async () => {
+    try {
+      await api.createFocus({ duration_min: 25 });
+      MessagePlugin.success(t('focus.doneToast'));
+      refreshStats();
+    } catch {
+      MessagePlugin.error(t('focus.saveErrorToast'));
+    }
+  }, [refreshStats, t]);
+
   // 计时
   useEffect(() => {
     if (isRunning && secondsLeft > 0) {
@@ -52,17 +62,7 @@ export default function FocusModule({ onRefresh: _onRefresh }: { onRefresh?: () 
         clearInterval(intervalRef.current);
       }
     };
-  }, [isRunning, secondsLeft]);
-
-  const handleComplete = useCallback(async () => {
-    try {
-      await api.createFocus({ duration_min: 25 });
-      MessagePlugin.success(t('focus.doneToast'));
-      refreshStats();
-    } catch {
-      MessagePlugin.error(t('focus.saveErrorToast'));
-    }
-  }, [refreshStats, t]);
+  }, [isRunning, secondsLeft, handleComplete]);
 
   const handleStart = () => {
     if (phase === 'done') {

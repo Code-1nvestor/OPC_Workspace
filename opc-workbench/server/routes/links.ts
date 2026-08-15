@@ -1,3 +1,4 @@
+import { errMsg } from '../err.js';
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import * as db from '../db.js';
@@ -8,8 +9,8 @@ const router = Router();
 router.get('/', (_req, res) => {
   try {
     res.json({ links: db.getAllLinks() });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '获取链接失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '获取链接失败') });
   }
 });
 
@@ -28,8 +29,8 @@ router.post('/', (req, res) => {
       created_at: new Date().toISOString(),
     });
     res.json({ link: item });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '创建链接失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '创建链接失败') });
   }
 });
 
@@ -39,8 +40,8 @@ router.patch('/:id', (req, res) => {
     const success = db.updateLink(req.params.id, req.body);
     if (!success) return res.status(404).json({ error: '链接不存在' });
     res.json({ success: true });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '更新链接失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '更新链接失败') });
   }
 });
 
@@ -50,8 +51,8 @@ router.delete('/:id', (req, res) => {
     const success = db.deleteLink(req.params.id);
     if (!success) return res.status(404).json({ error: '链接不存在' });
     res.json({ success: true });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '删除链接失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '删除链接失败') });
   }
 });
 

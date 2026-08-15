@@ -21,10 +21,10 @@ export function useAgents() {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        return [DEFAULT_AGENT, ...parsed.map((a: any) => ({
+        return [DEFAULT_AGENT, ...parsed.map((a: Record<string, unknown>) => ({
           ...a,
-          createdAt: new Date(a.createdAt),
-          updatedAt: new Date(a.updatedAt),
+          createdAt: new Date(a.createdAt as string),
+          updatedAt: new Date(a.updatedAt as string),
         }))];
       }
     } catch (e) {

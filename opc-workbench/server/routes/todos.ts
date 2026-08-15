@@ -1,3 +1,4 @@
+import { errMsg } from '../err.js';
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import * as db from '../db.js';
@@ -8,8 +9,8 @@ const router = Router();
 router.get('/', (_req, res) => {
   try {
     res.json({ todos: db.getAllTodos() });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '获取待办失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '获取待办失败') });
   }
 });
 
@@ -28,8 +29,8 @@ router.post('/', (req, res) => {
       updated_at: now,
     });
     res.json({ todo });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '创建待办失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '创建待办失败') });
   }
 });
 
@@ -39,8 +40,8 @@ router.patch('/:id', (req, res) => {
     const success = db.updateTodo(req.params.id, req.body);
     if (!success) return res.status(404).json({ error: '待办不存在' });
     res.json({ success: true });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '更新待办失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '更新待办失败') });
   }
 });
 
@@ -50,8 +51,8 @@ router.delete('/:id', (req, res) => {
     const success = db.deleteTodo(req.params.id);
     if (!success) return res.status(404).json({ error: '待办不存在' });
     res.json({ success: true });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '删除待办失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '删除待办失败') });
   }
 });
 

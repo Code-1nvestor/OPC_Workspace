@@ -1,3 +1,4 @@
+import { errMsg } from '../err.js';
 /**
  * 数据备份/恢复路由
  *
@@ -34,8 +35,8 @@ router.get('/export', (_req, res) => {
       notes: getAllNotes(),
     };
     res.json(backup);
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '导出失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '导出失败') });
   }
 });
 
@@ -165,8 +166,8 @@ router.post('/import', (req, res) => {
     }
 
     res.json({ success: true, mode, stats, message: `导入完成：待办 ${stats.todos}、进行中 ${stats.ongoing}、倒计时 ${stats.countdowns}、链接 ${stats.links}、番茄钟 ${stats.focus}、笔记 ${stats.notes}` });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || '导入失败' });
+  } catch (error) {
+    res.status(500).json({ error: errMsg(error, '导入失败') });
   }
 });
 

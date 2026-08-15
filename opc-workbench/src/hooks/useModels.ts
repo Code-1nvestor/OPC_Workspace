@@ -29,7 +29,7 @@ export function useModels() {
 
   useEffect(() => {
     fetchModels();
-  }, []);
+  }, [fetchModels]);
 
   // 监听 Provider 切换事件，自动刷新模型列表
   useEffect(() => {

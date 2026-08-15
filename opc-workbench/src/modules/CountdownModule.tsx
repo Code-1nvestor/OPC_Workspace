@@ -68,7 +68,7 @@ export default function CountdownModule({ onRefresh: _onRefresh }: { onRefresh?:
           <DatePicker
             placeholder={t('countdown.datePlaceholder')}
             value={newDate}
-            onChange={(v: any) => setNewDate(v ? String(v) : '')}
+            onChange={(v) => setNewDate(v ? String(v as string) : '')}
             mode="date"
             clearable
             size="small"

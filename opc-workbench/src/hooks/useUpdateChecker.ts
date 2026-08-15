@@ -17,15 +17,25 @@ export type UpdateStatus =
   | { status: 'downloaded' }
   | { status: 'error'; message: string };
 
+interface UpdateBridge {
+  electron?: boolean;
+  update?: {
+    onStatus: (cb: (data: UpdateStatus) => void) => () => void;
+    check: () => void;
+    download: () => void;
+    install: () => void;
+  };
+}
+
 export function useUpdateChecker() {
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>({ status: 'idle' });
 
   useEffect(() => {
     // 仅在 Electron 环境下生效
-    const opc = (window as any).opc;
+    const opc = (window as unknown as { opc?: UpdateBridge }).opc;
     if (!opc?.electron || !opc?.update?.onStatus) return;
 
-    const removeListener = opc.update.onStatus((data: any) => {
+    const removeListener = opc.update.onStatus((data) => {
       setUpdateStatus(data);
 
       switch (data.status) {
@@ -47,21 +57,21 @@ export function useUpdateChecker() {
   }, []);
 
   const checkForUpdate = useCallback(() => {
-    const opc = (window as any).opc;
+    const opc = (window as unknown as { opc?: UpdateBridge }).opc;
     if (opc?.update?.check) {
       opc.update.check();
     }
   }, []);
 
   const downloadUpdate = useCallback(() => {
-    const opc = (window as any).opc;
+    const opc = (window as unknown as { opc?: UpdateBridge }).opc;
     if (opc?.update?.download) {
       opc.update.download();
     }
   }, []);
 
   const installUpdate = useCallback(() => {
-    const opc = (window as any).opc;
+    const opc = (window as unknown as { opc?: UpdateBridge }).opc;
     if (opc?.update?.install) {
       opc.update.install();
     }

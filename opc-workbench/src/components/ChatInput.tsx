@@ -5,6 +5,11 @@ import { ChevronDownIcon, LockOnIcon, LockOffIcon, EditIcon, TaskIcon } from 'td
 import { Model, PermissionMode } from '../types';
 import { useI18n } from '../i18n';
 
+interface ChatSenderEvent {
+  detail?: unknown;
+  message?: unknown;
+}
+
 interface ChatInputProps {
   inputValue: string;
   selectedModel: string;
@@ -20,7 +25,7 @@ interface ChatInputProps {
 
 export function ChatInput({ inputValue, selectedModel, models, isLoading, permissionMode, onSend, onStop, onChange, onModelChange, onPermissionModeChange }: ChatInputProps) {
   const { t } = useI18n();
-  const chatSenderRef = useRef<any>(null);
+  const chatSenderRef = useRef<HTMLDivElement>(null);
 
   const PERMISSION_MODE_CONFIG: Record<PermissionMode, { label: string; shortLabel: string; icon: React.ReactNode; color: string; description: string }> = {
     'default': { label: t('perm.default'), shortLabel: t('perm.defaultShort'), icon: <LockOnIcon />, color: '#0052d9', description: t('perm.defaultDesc') },
@@ -29,8 +34,8 @@ export function ChatInput({ inputValue, selectedModel, models, isLoading, permis
     'bypassPermissions': { label: t('perm.bypass'), shortLabel: t('perm.bypassShort'), icon: <LockOffIcon />, color: '#e34d59', description: t('perm.bypassDesc') },
   };
 
-  const handleSend = useCallback((e: any) => {
-    const content = e?.detail?.message || e?.detail || e?.message || inputValue;
+  const handleSend = useCallback((e: ChatSenderEvent) => {
+    const content = (e?.detail as { message?: string } | undefined)?.message || e?.detail || (e?.message as string | undefined) || inputValue;
     if (content && typeof content === 'string' && content.trim() && selectedModel) {
       onSend(content.trim());
     } else if (inputValue.trim() && selectedModel) {
@@ -38,7 +43,7 @@ export function ChatInput({ inputValue, selectedModel, models, isLoading, permis
     }
   }, [inputValue, selectedModel, onSend]);
 
-  const handleChange = useCallback((e: any) => {
+  const handleChange = useCallback((e: ChatSenderEvent) => {
     const value = e?.detail ?? e ?? '';
     onChange(typeof value === 'string' ? value : '');
   }, [onChange]);

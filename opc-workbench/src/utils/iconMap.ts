@@ -7,7 +7,7 @@ import {
   Lightbulb
 } from 'lucide-react';
 
-export const ICON_MAP: Record<string, React.ComponentType<any>> = {
+export const ICON_MAP: Record<string, React.ComponentType<Record<string, unknown>>> = {
   Bot,
   Sparkles,
   Code,

@@ -50,7 +50,7 @@ export function DashboardPage() {
       >
         {moduleRegistry.map(mod => {
           const Component = mod.component;
-          const Icon = (Icons as any)[mod.icon] || Icons.LayoutGrid;
+          const Icon = (Icons as unknown as Record<string, React.ComponentType<{ size?: number; color?: string }>>)[mod.icon] || (Icons.LayoutGrid as React.ComponentType<{ size?: number; color?: string }>);
           const props: ModuleComponentProps = {
             onRefresh: () => triggerRefresh(mod.id),
           };

@@ -15,7 +15,7 @@ interface NewChatDialogProps {
   defaultAgentId?: string;
 }
 
-const ICON_MAP: Record<string, React.ComponentType<any>> = {
+const ICON_MAP: Record<string, React.ComponentType<Record<string, unknown>>> = {
   Bot,
   Sparkles,
   Code,
@@ -63,7 +63,7 @@ export function NewChatDialog({
         setSelectedModel(validModel);
       }
     }
-  }, [defaultModel, models]);
+  }, [defaultModel, models, selectedModel]);
 
   const handleConfirm = () => {
     onConfirm(selectedAgentId, effectiveModel, cwd || undefined);

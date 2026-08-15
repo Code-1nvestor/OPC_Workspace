@@ -88,7 +88,17 @@ export class CodeBuddyProvider implements ChatProvider {
     let currentToolId: string | null = null;
 
     for await (const msg of stream) {
-      const msgAny = msg as any;
+      const msgAny = msg as unknown as {
+        type?: string;
+        subtype?: string;
+        session_id?: string;
+        message?: { content?: string | Array<{ type: string; text?: string; id?: string; name?: string; input?: Record<string, unknown> }> };
+        tool_use_id?: string;
+        is_error?: boolean;
+        content?: unknown;
+        duration?: number;
+        cost?: number;
+      };
 
       if (msg.type === 'system' && msgAny.subtype === 'init') {
         const newSdkSessionId = msgAny.session_id;
@@ -100,15 +110,15 @@ export class CodeBuddyProvider implements ChatProvider {
         } else if (Array.isArray(content)) {
           for (const block of content) {
             if (block.type === 'text') {
-              yield { type: 'text', content: block.text };
+              yield { type: 'text', content: block.text || '' };
             } else if (block.type === 'tool_use') {
               const toolId = block.id || crypto.randomUUID();
               currentToolId = toolId;
               yield {
                 type: 'tool',
                 id: toolId,
-                name: block.name,
-                input: (block as any).input || {},
+                name: block.name || '',
+                input: (block as unknown as { input?: Record<string, unknown> }).input || {},
               };
             }
           }
