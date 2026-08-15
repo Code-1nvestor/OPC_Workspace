@@ -128,7 +128,7 @@ export function SettingsPage({
   const [savingEnv, setSavingEnv] = useState(false);
 
   // i18n
-  const { locale, setLocale } = useI18n();
+  const { t, locale, setLocale } = useI18n();
 
   // 自动更新
   const { updateStatus, checkForUpdate, downloadUpdate, installUpdate } = useUpdateChecker();
@@ -348,18 +348,18 @@ export function SettingsPage({
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-lg font-medium" style={{ color: 'var(--td-text-color-primary)' }}>LLM Provider</h2>
-              <p className="text-sm mt-1" style={{ color: 'var(--td-text-color-secondary)' }}>选择和配置 AI 模型提供方，切换即时生效</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--td-text-color-secondary)' }}>{t('settings.llmProviderDesc')}</p>
             </div>
-            <Button variant="text" icon={<RefreshIcon />} onClick={() => { checkLoginStatus(); fetchProviders(); }} loading={loginStatus.checking}>刷新</Button>
+            <Button variant="text" icon={<RefreshIcon />} onClick={() => { checkLoginStatus(); fetchProviders(); }} loading={loginStatus.checking}>{t('settings.refresh')}</Button>
           </div>
 
           <div className="flex items-center gap-3 mb-4">
             {loginStatus.checking ? (
-              <><Loading size="small" /><span style={{ color: 'var(--td-text-color-secondary)' }}>正在检查...</span></>
+              <><Loading size="small" /><span style={{ color: 'var(--td-text-color-secondary)' }}>{t('settings.checking')}</span></>
             ) : loginStatus.isLoggedIn ? (
-              <><CheckCircleFilledIcon size="20px" style={{ color: 'var(--td-success-color)' }} /><span style={{ color: 'var(--td-text-color-primary)' }}>已连接</span><Tag size="small" variant="outline">{loginStatus.providerName || loginStatus.providerId}</Tag></>
+              <><CheckCircleFilledIcon size="20px" style={{ color: 'var(--td-success-color)' }} /><span style={{ color: 'var(--td-text-color-primary)' }}>{t('settings.connected')}</span><Tag size="small" variant="outline">{loginStatus.providerName || loginStatus.providerId}</Tag></>
             ) : (
-              <><CloseCircleFilledIcon size="20px" style={{ color: 'var(--td-text-color-placeholder)' }} /><span style={{ color: 'var(--td-text-color-secondary)' }}>未连接</span></>
+              <><CloseCircleFilledIcon size="20px" style={{ color: 'var(--td-text-color-placeholder)' }} /><span style={{ color: 'var(--td-text-color-secondary)' }}>{t('settings.notConnected')}</span></>
             )}
           </div>
 
@@ -372,13 +372,13 @@ export function SettingsPage({
                       <span className="font-medium text-sm" style={{ color: 'var(--td-text-color-primary)' }}>{p.name}</span>
                       <span className="text-xs" style={{ color: 'var(--td-text-color-placeholder)' }}>{p.id} - {p.available ? '已配置' : '未配置'}</span>
                     </div>
-                    {p.isCurrent && <Tag size="small" theme="primary">当前</Tag>}
+                    {p.isCurrent && <Tag size="small" theme="primary">{t('settings.current')}</Tag>}
                   </div>
                   <div className="flex items-center gap-2">
                     {p.available && !p.isCurrent && (
                       <Button size="small" theme="primary" variant="outline" loading={switchingProvider || restarting} onClick={() => handleSwitchProvider(p.id)}>{switchingProvider || restarting ? '切换中' : '切换'}</Button>
                     )}
-                    {!p.available && <Tag size="small" variant="outline" style={{ color: 'var(--td-text-color-placeholder)' }}>未配置</Tag>}
+                    {!p.available && <Tag size="small" variant="outline" style={{ color: 'var(--td-text-color-placeholder)' }}>{t('settings.notConfigured')}</Tag>}
                   </div>
                 </div>
               ))}
@@ -388,7 +388,7 @@ export function SettingsPage({
           <div className="mb-4">
             {showEnvConfig ? (
               <div className="p-4 rounded-lg space-y-3" style={{ backgroundColor: 'var(--td-bg-color-component)' }}>
-                <h4 className="text-sm font-medium" style={{ color: 'var(--td-text-color-primary)' }}>环境变量配置</h4>
+                <h4 className="text-sm font-medium" style={{ color: 'var(--td-text-color-primary)' }}>{t('settings.envConfigTitle')}</h4>
                 <div className="space-y-2">
                   <p className="text-xs font-medium" style={{ color: 'var(--td-text-color-secondary)' }}>CodeBuddy</p>
                   <div className="grid grid-cols-2 gap-2">
@@ -411,12 +411,12 @@ export function SettingsPage({
                   </div>
                 </div>
                 <div className="flex items-center gap-2 pt-2">
-                  <Button size="small" theme="primary" onClick={saveEnvConfig} loading={savingEnv}>保存配置</Button>
-                  <Button size="small" variant="text" onClick={() => setShowEnvConfig(false)}>取消</Button>
+                  <Button size="small" theme="primary" onClick={saveEnvConfig} loading={savingEnv}>{t('settings.saveConfig')}</Button>
+                  <Button size="small" variant="text" onClick={() => setShowEnvConfig(false)}>{t('module.cancel')}</Button>
                 </div>
               </div>
             ) : (
-              <Button variant="outline" size="small" onClick={() => setShowEnvConfig(true)}>配置环境变量</Button>
+              <Button variant="outline" size="small" onClick={() => setShowEnvConfig(true)}>{t('settings.envConfig')}</Button>
             )}
           </div>
 
@@ -427,7 +427,7 @@ export function SettingsPage({
 
           {/* 设置导入/导出 */}
           <div className="flex items-center gap-2 mt-4 pt-3" style={{ borderTop: '1px dashed var(--td-component-border)' }}>
-            <Button size="small" variant="outline" onClick={handleExportSettings}>导出设置</Button>
+            <Button size="small" variant="outline" onClick={handleExportSettings}>{t('settings.exportSettings')}</Button>
             <Button size="small" variant="outline" loading={importing} onClick={() => fileInputRef.current?.click()}>导入设置</Button>
             <input
               ref={fileInputRef}
@@ -440,7 +440,7 @@ export function SettingsPage({
                 e.target.value = '';
               }}
             />
-            <span className="text-xs" style={{ color: 'var(--td-text-color-placeholder)' }}>导出不含 API Key，导入后需单独配置 Key</span>
+            <span className="text-xs" style={{ color: 'var(--td-text-color-placeholder)' }}>{t('settings.exportHint')}</span>
           </div>
         </div>
 
@@ -449,8 +449,8 @@ export function SettingsPage({
         {/* 语言切换 */}
         <div>
           <div className="mb-4">
-            <h2 className="text-lg font-medium" style={{ color: 'var(--td-text-color-primary)' }}>语言 / Language</h2>
-            <p className="text-sm mt-1" style={{ color: 'var(--td-text-color-secondary)' }}>选择界面语言 / Select interface language</p>
+            <h2 className="text-lg font-medium" style={{ color: 'var(--td-text-color-primary)' }}>{t('settings.langTitle')}</h2>
+            <p className="text-sm mt-1" style={{ color: 'var(--td-text-color-secondary)' }}>{t('settings.langDesc')}</p>
           </div>
           <div className="flex items-center gap-3">
             <Select
@@ -459,7 +459,7 @@ export function SettingsPage({
               style={{ width: 200 }}
             >
               <Select.Option value="zh-CN" label="简体中文">
-                <span>简体中文</span>
+                <span>{t('settings.langZh')}</span>
               </Select.Option>
               <Select.Option value="en-US" label="English">
                 <span>English</span>
@@ -473,24 +473,24 @@ export function SettingsPage({
         {/* 关于与更新 */}
         <div>
           <div className="mb-4">
-            <h2 className="text-lg font-medium" style={{ color: 'var(--td-text-color-primary)' }}>关于与更新</h2>
-            <p className="text-sm mt-1" style={{ color: 'var(--td-text-color-secondary)' }}>查看版本信息和检查更新</p>
+            <h2 className="text-lg font-medium" style={{ color: 'var(--td-text-color-primary)' }}>{t('settings.aboutTitle')}</h2>
+            <p className="text-sm mt-1" style={{ color: 'var(--td-text-color-secondary)' }}>{t('settings.aboutDesc')}</p>
           </div>
           <div className="space-y-3">
             <div className="flex items-center gap-3">
-              <span className="text-sm" style={{ color: 'var(--td-text-color-secondary)' }}>当前版本：</span>
+              <span className="text-sm" style={{ color: 'var(--td-text-color-secondary)' }}>{t('settings.currentVersion')}</span>
               <Tag size="small" variant="outline">v{(window as any).opc?.version || '1.0.0'}</Tag>
               {updateStatus.status === 'available' && (
-                <Tag size="small" theme="warning">新版本 v{updateStatus.version} 可用</Tag>
+                <Tag size="small" theme="warning">{t('settings.updateAvailable').replace('{v}', String(updateStatus.version))}</Tag>
               )}
               {updateStatus.status === 'downloading' && (
-                <Tag size="small" theme="primary">下载中 {updateStatus.percent}%</Tag>
+                <Tag size="small" theme="primary">{t('settings.downloading').replace('{p}', String(updateStatus.percent))}</Tag>
               )}
               {updateStatus.status === 'downloaded' && (
-                <Tag size="small" theme="success">已下载，可安装</Tag>
+                <Tag size="small" theme="success">{t('settings.downloaded')}</Tag>
               )}
               {updateStatus.status === 'up-to-date' && (
-                <Tag size="small" theme="success">已是最新版</Tag>
+                <Tag size="small" theme="success">{t('settings.upToDate')}</Tag>
               )}
             </div>
             <div className="flex items-center gap-2">
@@ -503,10 +503,10 @@ export function SettingsPage({
                 检查更新
               </Button>
               {updateStatus.status === 'available' && (
-                <Button size="small" theme="primary" onClick={downloadUpdate}>下载更新</Button>
+                <Button size="small" theme="primary" onClick={downloadUpdate}>{t('settings.downloadUpdate')}</Button>
               )}
               {updateStatus.status === 'downloaded' && (
-                <Button size="small" theme="primary" onClick={installUpdate}>安装并重启</Button>
+                <Button size="small" theme="primary" onClick={installUpdate}>{t('settings.installRestart')}</Button>
               )}
             </div>
           </div>
@@ -525,7 +525,7 @@ export function SettingsPage({
                 <div className="space-y-4">
                   <div className="flex justify-between items-center mb-2">
                     <h4 className="text-base font-medium" style={{ color: 'var(--td-text-color-primary)' }}>{editingAgent ? '编辑 Agent' : '创建新 Agent'}</h4>
-                    <Button variant="text" onClick={resetForm}>取消</Button>
+                    <Button variant="text" onClick={resetForm}>{t('module.cancel')}</Button>
                   </div>
 
                   <Form labelAlign="top">
@@ -571,7 +571,7 @@ export function SettingsPage({
                   </Form>
 
                   <div className="flex justify-end gap-2 pt-2">
-                    <Button variant="outline" onClick={resetForm}>取消</Button>
+                    <Button variant="outline" onClick={resetForm}>{t('module.cancel')}</Button>
                     <Button theme="primary" onClick={handleSave}>{editingAgent ? '保存修改' : '创建 Agent'}</Button>
                   </div>
                 </div>

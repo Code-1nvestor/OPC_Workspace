@@ -9,6 +9,7 @@ import {
   DeleteIcon
 } from 'tdesign-icons-react';
 import { PermissionRequest } from '../types';
+import { useI18n } from '../i18n';
 
 interface PermissionDialogProps {
   visible: boolean;
@@ -79,6 +80,7 @@ const formatToolInput = (toolName: string, input: Record<string, unknown>) => {
 };
 
 export function PermissionDialog({ visible, request, onAllow, onDeny }: PermissionDialogProps) {
+  const { t } = useI18n();
   if (!request) return null;
   
   const toolConfig = getToolConfig(request.toolName);
@@ -90,17 +92,17 @@ export function PermissionDialog({ visible, request, onAllow, onDeny }: Permissi
       header={
         <div className="flex items-center gap-2">
           <span style={{ color: toolConfig.color }}>{toolConfig.icon}</span>
-          <span>权限确认</span>
+          <span>{t('perm.confirm')}</span>
         </div>
       }
       onClose={onDeny}
       footer={
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onDeny}>
-            拒绝
+            {t('perm.deny')}
           </Button>
           <Button theme="primary" onClick={onAllow}>
-            允许
+            {t('perm.allow')}
           </Button>
         </div>
       }
@@ -110,7 +112,7 @@ export function PermissionDialog({ visible, request, onAllow, onDeny }: Permissi
       <div className="space-y-4">
         {/* 工具标签 */}
         <div className="flex items-center gap-2">
-          <span style={{ color: 'var(--td-text-color-secondary)' }}>工具：</span>
+          <span style={{ color: 'var(--td-text-color-secondary)' }}>{t('perm.tool')}</span>
           <Tag 
             theme="primary" 
             variant="light"
@@ -188,7 +190,7 @@ export function PermissionDialog({ visible, request, onAllow, onDeny }: Permissi
             }}
           >
             <span className="flex-shrink-0">⚠️</span>
-            <span>此操作将在您的系统上执行命令，请确认命令内容安全可信。</span>
+            <span>{t('perm.bashWarning')}</span>
           </div>
         )}
         {(request.toolName === 'Write' || request.toolName === 'Edit' || request.toolName === 'Delete') && (
@@ -200,7 +202,7 @@ export function PermissionDialog({ visible, request, onAllow, onDeny }: Permissi
             }}
           >
             <span className="flex-shrink-0">📝</span>
-            <span>此操作将修改您的文件系统，请确认操作正确。</span>
+            <span>{t('perm.fsWarning')}</span>
           </div>
         )}
       </div>

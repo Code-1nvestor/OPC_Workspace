@@ -6,6 +6,7 @@ import { ChatMessages } from '../components/ChatMessages';
 import { ChatInput } from '../components/ChatInput';
 import { api } from '../api/client';
 import { KeyRound, AlertCircle } from 'lucide-react';
+import { useI18n } from '../i18n';
 
 interface ChatPageProps {
   currentSession: Session | undefined;
@@ -48,6 +49,7 @@ export function ChatPage({
   onPermissionDeny,
   onPermissionModeChange,
 }: ChatPageProps) {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -127,10 +129,10 @@ export function ChatPage({
             <KeyRound size={28} color="var(--td-warning-color, #e6a23c)" />
           </div>
           <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--td-text-color-primary)' }}>
-            聊天功能需要配置 LLM Provider
+            {t('chat.needProvider')}
           </h3>
           <p className="text-sm mb-4" style={{ color: 'var(--td-text-color-secondary)' }}>
-            当前 Provider（{loginStatus.providerName || '未知'}）未检测到有效配置。请前往「设置」页面配置 API Key，或在 <code style={{ backgroundColor: 'var(--td-bg-color-secondarycontainer)', padding: '2px 6px', borderRadius: 4 }}>.env</code> 文件中设置。
+            当前 {t('chat.provider')}（{loginStatus.providerName || t('chat.unknown')}）{t('chat.providerNotConfigured')}。请前往「设置」页面配置 API Key，或在 <code style={{ backgroundColor: 'var(--td-bg-color-secondarycontainer)', padding: '2px 6px', borderRadius: 4 }}>.env</code> 文件中设置。
           </p>
           {loginStatus.error && (
             <div
@@ -148,21 +150,21 @@ export function ChatPage({
             className="p-4 rounded-lg text-left text-xs space-y-2"
             style={{ backgroundColor: 'var(--td-bg-color-component)' }}
           >
-            <p className="font-medium" style={{ color: 'var(--td-text-color-primary)' }}>支持的 Provider：</p>
+            <p className="font-medium" style={{ color: 'var(--td-text-color-primary)' }}>{t('chat.supportedProviders')}</p>
             <div className="space-y-1.5" style={{ color: 'var(--td-text-color-secondary)' }}>
-              <p><strong>CodeBuddy</strong>（默认）：CODEBUDDY_API_KEY 或 CLI 登录</p>
-              <p><strong>火山 GLM-5.2</strong>：ANTHROPIC_API_KEY（当前免费）</p>
-              <p><strong>Agnes</strong>（免费）：OPENAI_API_KEY，模型 agnes-2.0-flash</p>
+              <p><strong>CodeBuddy</strong>{t('chat.providerCodebuddy')}</p>
+              <p><strong>火山 GLM-5.2</strong>{t('chat.providerAnthropic')}</p>
+              <p><strong>Agnes</strong>{t('chat.providerOpenai')}</p>
             </div>
             <p className="mt-3" style={{ color: 'var(--td-text-color-secondary)' }}>
-              在 <code style={{ backgroundColor: 'var(--td-bg-color-secondarycontainer)', padding: '2px 6px', borderRadius: 4 }}>.env</code> 文件中设置 <code style={{ backgroundColor: 'var(--td-bg-color-secondarycontainer)', padding: '2px 6px', borderRadius: 4 }}>LLM_PROVIDER</code> 和对应 Key，然后重启服务
+              {t('chat.envSetupHint')} <code style={{ backgroundColor: 'var(--td-bg-color-secondarycontainer)', padding: '2px 6px', borderRadius: 4 }}>.env</code> {t('chat.envSetupHint2')} <code style={{ backgroundColor: 'var(--td-bg-color-secondarycontainer)', padding: '2px 6px', borderRadius: 4 }}>LLM_PROVIDER</code> {t('chat.envSetupHint3')}
             </p>
             <p style={{ color: 'var(--td-text-color-secondary)' }}>
-              或前往「设置」页面通过界面配置
+              {t('chat.uiSetupHint')}
             </p>
           </div>
           <p className="text-xs mt-4" style={{ color: 'var(--td-text-color-placeholder)' }}>
-            工作台功能不受影响，可正常使用
+            {t('chat.workbenchUnaffected')}
           </p>
         </div>
       </div>

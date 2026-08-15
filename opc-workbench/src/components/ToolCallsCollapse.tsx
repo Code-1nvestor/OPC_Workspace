@@ -25,6 +25,7 @@ import {
   PlusCircle
 } from 'lucide-react';
 import { ToolCall } from '../types';
+import { useI18n } from '../i18n';
 
 interface ToolCallsCollapseProps {
   toolCalls: ToolCall[];
@@ -130,6 +131,7 @@ const getToolType = (toolName: string): string => {
 };
 
 export function ToolCallsCollapse({ toolCalls, isStreaming = false }: ToolCallsCollapseProps) {
+  const { t } = useI18n();
   const [isExpanded, setIsExpanded] = useState(false);
   // 可折叠工具的展开状态（按 toolId 管理）
   const [expandedToolIds, setExpandedToolIds] = useState<Set<string>>(new Set());
@@ -242,7 +244,7 @@ export function ToolCallsCollapse({ toolCalls, isStreaming = false }: ToolCallsC
               className="text-xs"
               style={{ color: 'var(--td-text-color-placeholder)' }}
             >
-              {isRunning ? '执行中...' : isError ? '失败' : '完成'}
+              {isRunning ? t('tool.runningState') : isError ? t('tool.failed') : t('tool.completed')}
             </span>
           </div>
           
@@ -268,7 +270,7 @@ export function ToolCallsCollapse({ toolCalls, isStreaming = false }: ToolCallsC
                 backgroundColor: 'var(--td-bg-color-container)',
               }}
             >
-              <span style={{ color: 'var(--td-text-color-placeholder)' }}>{isError ? '错误: ' : '结果: '}</span>
+              <span style={{ color: 'var(--td-text-color-placeholder)' }}>{isError ? t('tool.error') : t('tool.result')}</span>
               {tool.result.length > 500 ? tool.result.slice(0, 500) + '...' : tool.result}
             </div>
           )}
@@ -280,7 +282,7 @@ export function ToolCallsCollapse({ toolCalls, isStreaming = false }: ToolCallsC
     // 标题: description，展开后显示: command
     if (isBash) {
       const command = (input.command || '') as string;
-      const description = (input.description || '执行命令') as string;
+      const description = (input.description || t('tool.execCommand')) as string;
       
       return (
         <div
@@ -304,13 +306,13 @@ export function ToolCallsCollapse({ toolCalls, isStreaming = false }: ToolCallsC
               className="flex-1 text-sm font-medium truncate"
               style={{ color: 'var(--td-text-color-primary)' }}
             >
-              {description || '执行命令'}
+              {description || t('tool.execCommand')}
             </span>
             <span
               className="text-xs"
               style={{ color: 'var(--td-text-color-placeholder)' }}
             >
-              {isRunning ? '执行中...' : isError ? '失败' : '完成'}
+              {isRunning ? t('tool.runningState') : isError ? t('tool.failed') : t('tool.completed')}
             </span>
             {command && (
               toolExpanded ? (
@@ -344,7 +346,7 @@ export function ToolCallsCollapse({ toolCalls, isStreaming = false }: ToolCallsC
                 backgroundColor: 'var(--td-bg-color-container)',
               }}
             >
-              <span style={{ color: 'var(--td-text-color-placeholder)' }}>{isError ? '错误: ' : '输出: '}</span>
+              <span style={{ color: 'var(--td-text-color-placeholder)' }}>{isError ? t('tool.error') : t('tool.output')}</span>
               {tool.result.length > 500 ? tool.result.slice(0, 500) + '...' : tool.result}
             </div>
           )}
@@ -382,7 +384,7 @@ export function ToolCallsCollapse({ toolCalls, isStreaming = false }: ToolCallsC
               className="text-xs"
               style={{ color: 'var(--td-text-color-placeholder)' }}
             >
-              {isRunning ? '搜索中...' : isError ? '失败' : '完成'}
+              {isRunning ? t('tool.searching') : isError ? t('tool.failed') : t('tool.completed')}
             </span>
           </div>
           
@@ -395,7 +397,7 @@ export function ToolCallsCollapse({ toolCalls, isStreaming = false }: ToolCallsC
                 backgroundColor: 'var(--td-bg-color-container)',
               }}
             >
-              <span style={{ color: 'var(--td-text-color-placeholder)' }}>{isError ? '错误: ' : '结果: '}</span>
+              <span style={{ color: 'var(--td-text-color-placeholder)' }}>{isError ? t('tool.error') : t('tool.result')}</span>
               {tool.result.length > 500 ? tool.result.slice(0, 500) + '...' : tool.result}
             </div>
           )}
@@ -437,7 +439,7 @@ export function ToolCallsCollapse({ toolCalls, isStreaming = false }: ToolCallsC
               className="text-xs"
               style={{ color: 'var(--td-text-color-placeholder)' }}
             >
-              {isRunning ? '获取中...' : isError ? '失败' : '完成'}
+              {isRunning ? t('tool.fetching') : isError ? t('tool.failed') : t('tool.completed')}
             </span>
             {url && (
               toolExpanded ? (
@@ -472,7 +474,7 @@ export function ToolCallsCollapse({ toolCalls, isStreaming = false }: ToolCallsC
                 backgroundColor: 'var(--td-bg-color-container)',
               }}
             >
-              <span style={{ color: 'var(--td-text-color-placeholder)' }}>{isError ? '错误: ' : '内容: '}</span>
+              <span style={{ color: 'var(--td-text-color-placeholder)' }}>{isError ? t('tool.error') : t('tool.content')}</span>
               {tool.result.length > 500 ? tool.result.slice(0, 500) + '...' : tool.result}
             </div>
           )}
@@ -517,7 +519,7 @@ export function ToolCallsCollapse({ toolCalls, isStreaming = false }: ToolCallsC
               className="text-xs"
               style={{ color: 'var(--td-text-color-placeholder)' }}
             >
-              {isRunning ? '写入中...' : isError ? '失败' : '完成'}
+              {isRunning ? t('tool.writing') : isError ? t('tool.failed') : t('tool.completed')}
             </span>
             {content && (
               toolExpanded ? (
@@ -561,7 +563,7 @@ export function ToolCallsCollapse({ toolCalls, isStreaming = false }: ToolCallsC
                 backgroundColor: 'var(--td-bg-color-container)',
               }}
             >
-              <span style={{ color: 'var(--td-text-color-placeholder)' }}>{isError ? '错误: ' : '结果: '}</span>
+              <span style={{ color: 'var(--td-text-color-placeholder)' }}>{isError ? t('tool.error') : t('tool.result')}</span>
               {tool.result.length > 500 ? tool.result.slice(0, 500) + '...' : tool.result}
             </div>
           )}
@@ -616,7 +618,7 @@ export function ToolCallsCollapse({ toolCalls, isStreaming = false }: ToolCallsC
               {todoTitle && <span style={{ color: 'var(--td-brand-color)' }}> · {todoTitle}</span>}
             </span>
             <span className="text-xs" style={{ color: 'var(--td-text-color-placeholder)' }}>
-              {isRunning ? '执行中...' : isError ? '失败' : '完成'}
+              {isRunning ? t('tool.runningState') : isError ? t('tool.failed') : t('tool.completed')}
             </span>
             {tool.result && (
               toolExpanded ? (
@@ -712,7 +714,7 @@ export function ToolCallsCollapse({ toolCalls, isStreaming = false }: ToolCallsC
             className="text-xs"
             style={{ color: 'var(--td-text-color-placeholder)' }}
           >
-            {isRunning ? '执行中...' : isError ? '失败' : '完成'}
+            {isRunning ? t('tool.runningState') : isError ? t('tool.failed') : t('tool.completed')}
           </span>
         </div>
         
@@ -725,7 +727,7 @@ export function ToolCallsCollapse({ toolCalls, isStreaming = false }: ToolCallsC
               backgroundColor: 'var(--td-bg-color-container)',
             }}
           >
-            <span style={{ color: 'var(--td-text-color-placeholder)' }}>输入: </span>
+            <span style={{ color: 'var(--td-text-color-placeholder)' }}>{t('tool.input')}</span>
             {inputStr.length > 300 ? inputStr.slice(0, 300) + '...' : inputStr}
           </div>
         )}
@@ -739,7 +741,7 @@ export function ToolCallsCollapse({ toolCalls, isStreaming = false }: ToolCallsC
               backgroundColor: 'var(--td-bg-color-container)',
             }}
           >
-            <span style={{ color: 'var(--td-text-color-placeholder)' }}>{isError ? '错误: ' : '结果: '}</span>
+            <span style={{ color: 'var(--td-text-color-placeholder)' }}>{isError ? t('tool.error') : t('tool.result')}</span>
             {tool.result.length > 500 ? tool.result.slice(0, 500) + '...' : tool.result}
           </div>
         )}
@@ -772,7 +774,7 @@ export function ToolCallsCollapse({ toolCalls, isStreaming = false }: ToolCallsC
           className="text-sm"
           style={{ color: 'var(--td-text-color-primary)' }}
         >
-          {hasRunning ? '执行中...' : isExpanded ? '收起步骤' : '查看步骤'}
+          {hasRunning ? t('tool.runningState') : isExpanded ? t('tool.collapseSteps') : t('tool.viewSteps')}
         </span>
         {toolCalls.length > 1 && (
           <span
@@ -830,7 +832,7 @@ export function ToolCallsCollapse({ toolCalls, isStreaming = false }: ToolCallsC
                 className="text-xs"
                 style={{ color: 'var(--td-text-color-secondary)' }}
               >
-                {previousCount} 个步骤已完成
+                {previousCount} {t('tool.stepsCompleted')}
               </span>
             </div>
             {/* 已完成工具的图标汇总 */}

@@ -4,6 +4,7 @@ import { Bot } from 'lucide-react';
 import { APP_CONFIG } from '../config';
 import { Model, Agent, PermissionMode } from '../types';
 import { ICON_MAP } from '../utils/iconMap';
+import { useI18n } from '../i18n';
 
 interface NewChatViewProps {
   agents: Agent[];
@@ -26,6 +27,7 @@ export function NewChatView({
   onSetCwd,
   onSetPermissionMode,
 }: NewChatViewProps) {
+  const { t } = useI18n();
   const selectedAgent = agents.find(a => a.id === newChatAgentId);
 
   return (
@@ -48,14 +50,14 @@ export function NewChatView({
             {APP_CONFIG.name}
           </h2>
           <p style={{ color: 'var(--td-text-color-secondary)' }}>
-            选择一个 Agent 开始对话
+            {t('newchat.chooseAgent')}
           </p>
         </div>
         
         {/* Agent 选择 */}
         <div className="mb-6">
           <label className="block text-sm font-medium mb-3" style={{ color: 'var(--td-text-color-primary)' }}>
-            选择 Agent
+            {t('newchat.selectAgent')}
           </label>
           <div className="grid grid-cols-2 gap-3 max-h-[280px] overflow-y-auto">
             {agents.map(agent => {
@@ -104,16 +106,16 @@ export function NewChatView({
         {/* 工作目录 */}
         <div className="mb-6">
           <label className="block text-sm font-medium mb-2" style={{ color: 'var(--td-text-color-primary)' }}>
-            工作目录 <span style={{ color: 'var(--td-text-color-placeholder)' }}>(可选)</span>
+            {t('newchat.workdir')} <span style={{ color: 'var(--td-text-color-placeholder)' }}>{t('newchat.workdirOptional')}</span>
           </label>
           <Input
             value={newChatCwd}
             onChange={(v) => onSetCwd(v as string)}
-            placeholder="例如：/Users/username/projects/my-app"
+            placeholder={t('newchat.workdirPlaceholder')}
             prefixIcon={<FolderOpenIcon />}
           />
           <p className="text-xs mt-1.5" style={{ color: 'var(--td-text-color-placeholder)' }}>
-            指定 Agent 的工作目录，用于文件操作等
+            {t('newchat.workdirHint')}
           </p>
         </div>
 

@@ -9,6 +9,7 @@ import {
   DeleteIcon
 } from 'tdesign-icons-react';
 import { PermissionRequest } from '../types';
+import { useI18n } from '../i18n';
 
 interface InlinePermissionCardProps {
   request: PermissionRequest;
@@ -48,6 +49,7 @@ const getMainInfo = (toolName: string, input: Record<string, unknown>): string =
 };
 
 export function InlinePermissionCard({ request, onAllow, onDeny }: InlinePermissionCardProps) {
+  const { t } = useI18n();
   const toolConfig = getToolConfig(request.toolName);
   const mainInfo = getMainInfo(request.toolName, request.input);
   const isDangerous = request.toolName === 'Bash' || request.toolName === 'Delete' || request.toolName === 'DeleteFile';
@@ -62,11 +64,11 @@ export function InlinePermissionCard({ request, onAllow, onDeny }: InlinePermiss
         <code className="text-sm px-2.5 py-1 rounded-md font-mono truncate max-w-[400px]" style={{ backgroundColor: 'var(--td-bg-color-component)', color: 'var(--td-text-color-primary)' }} title={mainInfo}>{mainInfo}</code>
       )}
       {isDangerous && (
-        <span className="text-xs px-2 py-0.5 rounded" style={{ backgroundColor: 'rgba(227, 77, 89, 0.1)', color: '#e34d59' }}>危险操作</span>
+        <span className="text-xs px-2 py-0.5 rounded" style={{ backgroundColor: 'rgba(227, 77, 89, 0.1)', color: '#e34d59' }}>{t('perm.dangerous')}</span>
       )}
       <div className="flex items-center gap-2 ml-auto">
-        <Button size="small" theme="danger" variant="text" onClick={onDeny} style={{ color: '#e34d59', fontWeight: 500 }}>拒绝</Button>
-        <Button size="small" theme="success" variant="base" onClick={onAllow} style={{ backgroundColor: '#2ba471', borderColor: '#2ba471', color: 'white', fontWeight: 500 }}>允许</Button>
+        <Button size="small" theme="danger" variant="text" onClick={onDeny} style={{ color: '#e34d59', fontWeight: 500 }}>{t('perm.deny')}</Button>
+        <Button size="small" theme="success" variant="base" onClick={onAllow} style={{ backgroundColor: '#2ba471', borderColor: '#2ba471', color: 'white', fontWeight: 500 }}>{t('perm.allow')}</Button>
       </div>
     </div>
   );

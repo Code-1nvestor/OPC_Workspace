@@ -3,6 +3,7 @@ import { Dialog, Select, Input, Button } from 'tdesign-react';
 import { FolderOpenIcon } from 'tdesign-icons-react';
 import { Bot, Sparkles, Code, FileText, Globe, Lightbulb } from 'lucide-react';
 import { CustomAgent, Model } from '../types';
+import { useI18n } from '../i18n';
 
 interface NewChatDialogProps {
   visible: boolean;
@@ -32,6 +33,7 @@ export function NewChatDialog({
   defaultModel,
   defaultAgentId = 'default',
 }: NewChatDialogProps) {
+  const { t } = useI18n();
   const [selectedAgentId, setSelectedAgentId] = useState(defaultAgentId);
   const [selectedModel, setSelectedModel] = useState(defaultModel);
   const [cwd, setCwd] = useState('');
@@ -89,12 +91,12 @@ export function NewChatDialog({
       width={500}
       confirmBtn={
         <Button theme="primary" onClick={handleConfirm}>
-          开始对话
+          {t('newchat.startChat')}
         </Button>
       }
       cancelBtn={
         <Button variant="outline" onClick={handleClose}>
-          取消
+          {t('module.cancel')}
         </Button>
       }
     >
@@ -150,7 +152,7 @@ export function NewChatDialog({
           <Select
             value={effectiveModel}
             onChange={(v) => setSelectedModel(v as string)}
-            placeholder="选择模型"
+            placeholder={t('chat.selectModel')}
             style={{ width: '100%' }}
             filterable
           >
@@ -168,11 +170,11 @@ export function NewChatDialog({
           <Input
             value={cwd}
             onChange={(v) => setCwd(v as string)}
-            placeholder="例如：/Users/username/projects/my-app"
+            placeholder={t('newchat.workdirPlaceholder')}
             prefixIcon={<FolderOpenIcon />}
           />
           <p className="text-xs mt-1" style={{ color: 'var(--td-text-color-placeholder)' }}>
-            指定 Agent 的工作目录，用于文件操作等
+            {t('newchat.workdirHint')}
           </p>
         </div>
 

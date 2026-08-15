@@ -18,6 +18,7 @@ import {
 } from 'tdesign-icons-react';
 import { Bot, Sparkles, Code, FileText, Globe, Lightbulb } from 'lucide-react';
 import { CustomAgent } from '../types';
+import { useI18n } from '../i18n';
 
 interface AgentConfigProps {
   visible: boolean;
@@ -81,6 +82,7 @@ export function AgentConfigDialog({
   onUpdate, 
   onDelete 
 }: AgentConfigProps) {
+  const { t } = useI18n();
   const [editingAgent, setEditingAgent] = useState<CustomAgent | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [formData, setFormData] = useState({
@@ -127,7 +129,7 @@ export function AgentConfigDialog({
       MessagePlugin.success('Agent 已更新');
     } else {
       onAdd(formData);
-      MessagePlugin.success('Agent 已创建');
+      MessagePlugin.success(t('agent.created'));
     }
     resetForm();
   };
@@ -142,7 +144,7 @@ export function AgentConfigDialog({
 
   const handleDelete = (id: string) => {
     onDelete(id);
-    MessagePlugin.success('Agent 已删除');
+    MessagePlugin.success(t('agent.deleted'));
   };
 
   const getIconComponent = (iconName: string) => {
@@ -168,29 +170,29 @@ export function AgentConfigDialog({
             <div className="space-y-4">
               <div className="flex justify-between items-center mb-4">
                 <h4 className="text-base font-medium" style={{ color: 'var(--td-text-color-primary)' }}>
-                  {editingAgent ? '编辑 Agent' : '创建新 Agent'}
+                  {editingAgent ? t('agent.edit') : t('agent.createNew')}
                 </h4>
-                <Button variant="text" onClick={resetForm}>取消</Button>
+                <Button variant="text" onClick={resetForm}>{t('module.cancel')}</Button>
               </div>
               
               <Form labelAlign="top">
-                <Form.FormItem label="名称" requiredMark>
+                <Form.FormItem label={t('agent.name')} requiredMark>
                   <Input 
                     value={formData.name}
                     onChange={(v) => setFormData(prev => ({ ...prev, name: v as string }))}
-                    placeholder="例如：代码助手"
+                    placeholder={t('agent.namePlaceholder')}
                   />
                 </Form.FormItem>
                 
-                <Form.FormItem label="描述">
+                <Form.FormItem label={t('agent.desc')}>
                   <Input 
                     value={formData.description}
                     onChange={(v) => setFormData(prev => ({ ...prev, description: v as string }))}
-                    placeholder="简短描述这个 Agent 的用途"
+                    placeholder={t('agent.descPlaceholder')}
                   />
                 </Form.FormItem>
                 
-                <Form.FormItem label="图标和颜色">
+                <Form.FormItem label={t('agent.iconColor')}>
                   <div className="flex gap-4">
                     <div className="flex gap-2">
                       {PRESET_ICONS.map(({ name, icon: Icon }) => (
@@ -224,20 +226,20 @@ export function AgentConfigDialog({
                   </div>
                 </Form.FormItem>
                 
-                <Form.FormItem label="系统提示词" requiredMark>
+                <Form.FormItem label={t('agent.systemPrompt')} requiredMark>
                   <Textarea 
                     value={formData.systemPrompt}
                     onChange={(v) => setFormData(prev => ({ ...prev, systemPrompt: v as string }))}
-                    placeholder="定义 Agent 的行为和能力..."
+                    placeholder={t('agent.promptPlaceholder')}
                     autosize={{ minRows: 4, maxRows: 8 }}
                   />
                 </Form.FormItem>
               </Form>
               
               <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline" onClick={resetForm}>取消</Button>
+                <Button variant="outline" onClick={resetForm}>{t('module.cancel')}</Button>
                 <Button theme="primary" onClick={handleSave}>
-                  {editingAgent ? '保存修改' : '创建 Agent'}
+                  {editingAgent ? t('agent.saveChanges') : t('agent.create')}
                 </Button>
               </div>
             </div>
@@ -247,7 +249,7 @@ export function AgentConfigDialog({
             {/* 快速模板 */}
             <div>
               <h4 className="text-sm font-medium mb-3" style={{ color: 'var(--td-text-color-secondary)' }}>
-                快速创建
+                {t('agent.quickCreate')}
               </h4>
               <div className="grid grid-cols-2 gap-3">
                 {PRESET_TEMPLATES.map(template => {
@@ -292,7 +294,7 @@ export function AgentConfigDialog({
               block 
               onClick={() => setIsCreating(true)}
             >
-              从头创建 Agent
+              {t('agent.createFromScratch')}
             </Button>
 
             {/* 已有的自定义 Agent */}
@@ -322,7 +324,7 @@ export function AgentConfigDialog({
                             </div>
                           </div>
                           <div className="flex gap-1">
-                            <Tooltip content="编辑">
+                            <Tooltip content={t('agent.editTooltip')}>
                               <Button 
                                 variant="text" 
                                 shape="circle" 
