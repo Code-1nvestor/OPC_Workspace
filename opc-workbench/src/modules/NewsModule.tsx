@@ -8,17 +8,22 @@ import { Tabs, Tag } from 'tdesign-react';
 const { TabPanel } = Tabs;
 import { ExternalLink, Clock } from 'lucide-react';
 import { useState } from 'react';
+import { useI18n } from '../i18n';
 
-const CATEGORIES = [
-  { key: 'all', label: '全部' },
-  { key: 'ai-models', label: '模型' },
-  { key: 'ai-products', label: '产品' },
-  { key: 'industry', label: '行业' },
-  { key: 'paper', label: '论文' },
-  { key: 'tip', label: '技巧' },
-];
+const CATEGORY_KEYS = ['all', 'ai-models', 'ai-products', 'industry', 'paper', 'tip'] as const;
+type CategoryKey = (typeof CATEGORY_KEYS)[number];
+
+const CATEGORY_I18N: Record<CategoryKey, string> = {
+  all: 'news.cat.all',
+  'ai-models': 'news.cat.models',
+  'ai-products': 'news.cat.products',
+  industry: 'news.cat.industry',
+  paper: 'news.cat.paper',
+  tip: 'news.cat.tip',
+};
 
 export default function NewsModule({ onRefresh: _onRefresh }: { onRefresh?: () => void }) {
+  const { t } = useI18n();
   const [category, setCategory] = useState('all');
   const { data, loading } = useVisiblePolling(
     () => api.getNews({ category, since: 168 }),
@@ -27,16 +32,18 @@ export default function NewsModule({ onRefresh: _onRefresh }: { onRefresh?: () =
 
   const items = data?.items || [];
 
+  const CATEGORIES = CATEGORY_KEYS.map(key => ({ key, label: t(CATEGORY_I18N[key]) }));
+
   const formatTime = (dateStr: string) => {
     if (!dateStr) return '';
     const d = new Date(dateStr);
     const now = new Date();
     const diff = now.getTime() - d.getTime();
     const hours = Math.floor(diff / 3600000);
-    if (hours < 1) return '刚刚';
-    if (hours < 24) return `${hours}小时前`;
+    if (hours < 1) return t('news.justNow');
+    if (hours < 24) return t('news.hoursAgo').replace('{n}', String(hours));
     const days = Math.floor(hours / 24);
-    return `${days}天前`;
+    return t('news.daysAgo').replace('{n}', String(days));
   };
 
   return (
@@ -54,10 +61,10 @@ export default function NewsModule({ onRefresh: _onRefresh }: { onRefresh?: () =
 
       <div className="flex-1 overflow-y-auto mt-2 space-y-2">
         {loading && items.length === 0 && (
-          <div className="text-center py-8 text-sm" style={{ color: 'var(--td-text-color-placeholder)' }}>加载中...</div>
+          <div className="text-center py-8 text-sm" style={{ color: 'var(--td-text-color-placeholder)' }}>{t('module.loading')}</div>
         )}
         {!loading && items.length === 0 && (
-          <div className="text-center py-8 text-sm" style={{ color: 'var(--td-text-color-placeholder)' }}>暂无资讯</div>
+          <div className="text-center py-8 text-sm" style={{ color: 'var(--td-text-color-placeholder)' }}>{t('news.empty')}</div>
         )}
         {items.slice(0, 20).map((item, idx) => (
           <a

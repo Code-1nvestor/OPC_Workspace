@@ -7,10 +7,12 @@ import { api } from '../api/client';
 import { Button, MessagePlugin } from 'tdesign-react';
 import { Play, Pause, RotateCcw, Coffee } from 'lucide-react';
 import { useVisiblePolling } from '../hooks/useVisiblePolling';
+import { useI18n } from '../i18n';
 
 const FOCUS_DURATION = 25 * 60; // 25 分钟 = 1500 秒
 
 export default function FocusModule({ onRefresh: _onRefresh }: { onRefresh?: () => void }) {
+  const { t } = useI18n();
   const [secondsLeft, setSecondsLeft] = useState(FOCUS_DURATION);
   const [isRunning, setIsRunning] = useState(false);
   const [phase, setPhase] = useState<'idle' | 'focusing' | 'done'>('idle');
@@ -55,12 +57,12 @@ export default function FocusModule({ onRefresh: _onRefresh }: { onRefresh?: () 
   const handleComplete = useCallback(async () => {
     try {
       await api.createFocus({ duration_min: 25 });
-      MessagePlugin.success('专注完成！已记录 25 分钟');
+      MessagePlugin.success(t('focus.doneToast'));
       refreshStats();
     } catch {
-      MessagePlugin.error('记录失败，但专注已完成');
+      MessagePlugin.error(t('focus.saveErrorToast'));
     }
-  }, [refreshStats]);
+  }, [refreshStats, t]);
 
   const handleStart = () => {
     if (phase === 'done') {
@@ -137,7 +139,7 @@ export default function FocusModule({ onRefresh: _onRefresh }: { onRefresh?: () 
             onClick={handleStart}
             size="small"
           >
-            {phase === 'done' ? '再来一轮' : phase === 'focusing' ? '继续' : '开始专注'}
+            {phase === 'done' ? t('focus.again') : phase === 'focusing' ? t('focus.continue') : t('focus.start')}
           </Button>
         ) : (
           <Button
@@ -146,7 +148,7 @@ export default function FocusModule({ onRefresh: _onRefresh }: { onRefresh?: () 
             onClick={handlePause}
             size="small"
           >
-            暂停
+            {t('focus.pause')}
           </Button>
         )}
         <Button
@@ -155,14 +157,14 @@ export default function FocusModule({ onRefresh: _onRefresh }: { onRefresh?: () 
           onClick={handleReset}
           size="small"
         >
-          重置
+          {t('focus.reset')}
         </Button>
       </div>
 
       {/* 统计 */}
       <div className="flex gap-4 text-xs" style={{ color: 'var(--td-text-color-secondary)' }}>
-        <span>今日 <strong style={{ color: 'var(--td-brand-color)' }}>{todayCount}</strong> 次</span>
-        <span>累计 <strong style={{ color: 'var(--td-brand-color)' }}>{totalMinutes}</strong> 分钟</span>
+        <span>{t('focus.today')} <strong style={{ color: 'var(--td-brand-color)' }}>{todayCount}</strong>{t('focus.count')}</span>
+        <span>{t('focus.total')} <strong style={{ color: 'var(--td-brand-color)' }}>{totalMinutes}</strong>{t('focus.minutes')}</span>
       </div>
     </div>
   );

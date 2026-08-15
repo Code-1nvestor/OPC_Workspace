@@ -7,8 +7,10 @@ import { api } from '../api/client';
 import { Button, Input, MessagePlugin, Popconfirm } from 'tdesign-react';
 import { Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { useI18n } from '../i18n';
 
 export default function LinksModule({ onRefresh: _onRefresh }: { onRefresh?: () => void }) {
+  const { t } = useI18n();
   const { data, loading, setData } = useVisiblePolling(
     () => api.getLinks(),
     { interval: 120000 }
@@ -22,7 +24,7 @@ export default function LinksModule({ onRefresh: _onRefresh }: { onRefresh?: () 
 
   const handleAdd = async () => {
     if (!newTitle.trim() || !newUrl.trim()) {
-      MessagePlugin.warning('请填写标题和 URL');
+      MessagePlugin.warning(t('links.fillHint') || '请填写标题和 URL');
       return;
     }
     try {
@@ -30,9 +32,9 @@ export default function LinksModule({ onRefresh: _onRefresh }: { onRefresh?: () 
       const res = await api.createLink({ title: newTitle.trim(), url, icon: newIcon.trim() || undefined });
       setData(prev => ({ ...prev!, links: [...prev!.links, res.link] }));
       setNewTitle(''); setNewUrl(''); setNewIcon(''); setShowAdd(false);
-      MessagePlugin.success('已添加');
+      MessagePlugin.success(t('todo.added') || '已添加');
     } catch {
-      MessagePlugin.error('添加失败');
+      MessagePlugin.error(t('todo.addFailed') || '添加失败');
     }
   };
 
@@ -40,9 +42,9 @@ export default function LinksModule({ onRefresh: _onRefresh }: { onRefresh?: () 
     try {
       await api.deleteLink(id);
       setData(prev => ({ ...prev!, links: prev!.links.filter(l => l.id !== id) }));
-      MessagePlugin.success('已删除');
+      MessagePlugin.success(t('todo.deleted') || '已删除');
     } catch {
-      MessagePlugin.error('删除失败');
+      MessagePlugin.error(t('todo.deleteFailed') || '删除失败');
     }
   };
 
@@ -58,27 +60,27 @@ export default function LinksModule({ onRefresh: _onRefresh }: { onRefresh?: () 
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <div className="flex justify-end mb-2">
-        <Button size="small" variant="text" icon={<Plus size={14} />} onClick={() => setShowAdd(true)}>添加</Button>
+        <Button size="small" variant="text" icon={<Plus size={14} />} onClick={() => setShowAdd(true)}>{t('module.add')}</Button>
       </div>
 
       {showAdd && (
         <div className="mb-3 p-3 rounded-lg space-y-2" style={{ backgroundColor: 'var(--td-bg-color-secondarycontainer)' }}>
-          <Input placeholder="标题" value={newTitle} onChange={(v: string) => setNewTitle(v)} size="small" />
-          <Input placeholder="https://..." value={newUrl} onChange={(v: string) => setNewUrl(v)} size="small" />
-          <Input placeholder="图标 emoji（可选）" value={newIcon} onChange={(v: string) => setNewIcon(v)} size="small" />
+          <Input placeholder={t('links.titlePlaceholder')} value={newTitle} onChange={(v: string) => setNewTitle(v)} size="small" />
+          <Input placeholder={t('links.urlPlaceholder')} value={newUrl} onChange={(v: string) => setNewUrl(v)} size="small" />
+          <Input placeholder={t('links.iconPlaceholder')} value={newIcon} onChange={(v: string) => setNewIcon(v)} size="small" />
           <div className="flex gap-2 justify-end">
-            <Button size="small" variant="text" onClick={() => { setShowAdd(false); setNewTitle(''); setNewUrl(''); setNewIcon(''); }}>取消</Button>
-            <Button size="small" theme="primary" onClick={handleAdd}>确认</Button>
+            <Button size="small" variant="text" onClick={() => { setShowAdd(false); setNewTitle(''); setNewUrl(''); setNewIcon(''); }}>{t('module.cancel')}</Button>
+            <Button size="small" theme="primary" onClick={handleAdd}>{t('module.confirm')}</Button>
           </div>
         </div>
       )}
 
       <div className="flex-1 overflow-y-auto">
         {loading && links.length === 0 && (
-          <div className="text-center py-8 text-sm" style={{ color: 'var(--td-text-color-placeholder)' }}>加载中...</div>
+          <div className="text-center py-8 text-sm" style={{ color: 'var(--td-text-color-placeholder)' }}>{t('module.loading')}</div>
         )}
         {!loading && links.length === 0 && (
-          <div className="text-center py-8 text-sm" style={{ color: 'var(--td-text-color-placeholder)' }}>暂无链接</div>
+          <div className="text-center py-8 text-sm" style={{ color: 'var(--td-text-color-placeholder)' }}>{t('links.empty')}</div>
         )}
         <div className="grid grid-cols-3 gap-2">
           {links.map(link => (

@@ -7,8 +7,10 @@ import { api } from '../api/client';
 import { Checkbox, Input, Button, Popconfirm, MessagePlugin } from 'tdesign-react';
 import { Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { useI18n } from '../i18n';
 
 export default function TodoModule({ onRefresh: _onRefresh }: { onRefresh?: () => void }) {
+  const { t } = useI18n();
   const { data, loading, refresh, setData } = useVisiblePolling(
     () => api.getTodos(),
     { interval: 30000 }
@@ -25,9 +27,9 @@ export default function TodoModule({ onRefresh: _onRefresh }: { onRefresh?: () =
       const res = await api.createTodo(newTodo.trim());
       setData(prev => ({ ...prev!, todos: [res.todo, ...prev!.todos] }));
       setNewTodo('');
-      MessagePlugin.success('已添加');
+      MessagePlugin.success(t('todo.added') || '已添加');
     } catch {
-      MessagePlugin.error('添加失败');
+      MessagePlugin.error(t('todo.addFailed') || '添加失败');
     }
   };
 
@@ -48,9 +50,9 @@ export default function TodoModule({ onRefresh: _onRefresh }: { onRefresh?: () =
     try {
       await api.deleteTodo(id);
       setData(prev => ({ ...prev!, todos: prev!.todos.filter(t => t.id !== id) }));
-      MessagePlugin.success('已删除');
+      MessagePlugin.success(t('todo.deleted') || '已删除');
     } catch {
-      MessagePlugin.error('删除失败');
+      MessagePlugin.error(t('todo.deleteFailed') || '删除失败');
     }
   };
 
@@ -59,7 +61,7 @@ export default function TodoModule({ onRefresh: _onRefresh }: { onRefresh?: () =
       {/* 输入框 */}
       <div className="flex gap-2 mb-3 flex-shrink-0">
         <Input
-          placeholder="添加待办..."
+          placeholder={t('todo.placeholder')}
           value={newTodo}
           onChange={(v: string) => setNewTodo(v)}
           onEnter={handleAdd}
@@ -71,10 +73,10 @@ export default function TodoModule({ onRefresh: _onRefresh }: { onRefresh?: () =
       {/* 列表 */}
       <div className="flex-1 overflow-y-auto space-y-1">
         {loading && todos.length === 0 && (
-          <div className="text-center py-8 text-sm" style={{ color: 'var(--td-text-color-placeholder)' }}>加载中...</div>
+          <div className="text-center py-8 text-sm" style={{ color: 'var(--td-text-color-placeholder)' }}>{t('module.loading')}</div>
         )}
         {!loading && todos.length === 0 && (
-          <div className="text-center py-8 text-sm" style={{ color: 'var(--td-text-color-placeholder)' }}>暂无待办</div>
+          <div className="text-center py-8 text-sm" style={{ color: 'var(--td-text-color-placeholder)' }}>{t('module.empty')}</div>
         )}
 
         {/* 未完成 */}
@@ -90,7 +92,7 @@ export default function TodoModule({ onRefresh: _onRefresh }: { onRefresh?: () =
             <span className="flex-1 text-sm truncate" style={{ color: 'var(--td-text-color-primary)' }}>
               {todo.title}
             </span>
-            <Popconfirm content="确定删除？" onConfirm={() => handleDelete(todo.id)}>
+            <Popconfirm content={t('todo.confirmDelete')} onConfirm={() => handleDelete(todo.id)}>
               <button
                 className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
                 style={{ color: 'var(--td-text-color-secondary)' }}
@@ -119,7 +121,7 @@ export default function TodoModule({ onRefresh: _onRefresh }: { onRefresh?: () =
                 <span className="flex-1 text-sm truncate line-through" style={{ color: 'var(--td-text-color-placeholder)' }}>
                   {todo.title}
                 </span>
-                <Popconfirm content="确定删除？" onConfirm={() => handleDelete(todo.id)}>
+                <Popconfirm content={t('todo.confirmDelete')} onConfirm={() => handleDelete(todo.id)}>
                   <button
                     className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
                     style={{ color: 'var(--td-text-color-secondary)' }}
